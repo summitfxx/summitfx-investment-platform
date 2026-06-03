@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SummitFX Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:#0b1220;
+color:white;
+overflow-x:hidden;
+}
+
+/* TOP BAR */
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 25px;
+background:#0f172a;
+position:sticky;
+top:0;
+z-index:1000;
+}
+
+.logo{
+font-weight:700;
+color:#00c2ff;
+font-size:20px;
+}
+
+/* MENU BUTTON */
+.menu-btn{
+font-size:22px;
+cursor:pointer;
+}
+
+/* MAIN */
+.container{
+padding:20px;
+}
+
+.card{
+background:#111827;
+padding:20px;
+border-radius:15px;
+margin-bottom:15px;
+}
+
+.balance{
+font-size:28px;
+font-weight:700;
+color:#00c2ff;
+}
+
+/* RIGHT SIDEBAR MENU */
+.sidebar{
+position:fixed;
+top:0;
+right:-280px;
+width:280px;
+height:100vh;
+background:#0f172a;
+padding:20px;
+transition:0.3s;
+z-index:2000;
+}
+
+.sidebar.active{
+right:0;
+}
+
+.sidebar h3{
+margin-bottom:20px;
+color:#00c2ff;
+}
+
+.menu a{
+display:block;
+padding:12px;
+margin:8px 0;
+color:white;
+text-decoration:none;
+background:#111827;
+border-radius:10px;
+transition:0.2s;
+}
+
+.menu a:hover{
+background:#1f2937;
+color:#00c2ff;
+}
+
+/* OVERLAY */
+.overlay{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
+display:none;
+z-index:1500;
+}
+
+.overlay.active{
+display:block;
+}
+
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+gap:10px;
+}
+
+.small-card{
+background:#111827;
+padding:15px;
+border-radius:12px;
+text-align:center;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+.balance{
+font-size:22px;
+}
+}
+</style>
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+<div class="logo">SummitFX</div>
+<div class="menu-btn" onclick="openMenu()">☰</div>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+<!-- RIGHT SIDEBAR -->
+<div class="sidebar" id="sidebar">
+
+<h3>Menu</h3>
+
+<div class="menu">
+<a href="#">👤 My Profile</a>
+<a href="#">💰 Deposit</a>
+<a href="#">🏦 Withdraw</a>
+<a href="#">🛡 Verify KYC</a>
+<a href="#">⚙ Settings</a>
+<a href="#" onclick="logout()">🚪 Logout</a>
+</div>
+
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+
+<div class="card">
+<h2>Welcome Back</h2>
+<p id="userEmail">Loading...</p>
+</div>
+
+<div class="card">
+<h3>Balance</h3>
+<div class="balance">$0.00</div>
+</div>
+
+<div class="grid">
+
+<div class="small-card">
+<p>Active Plans</p>
+<h3>0</h3>
+</div>
+
+<div class="small-card">
+<p>Profit</p>
+<h3>$0.00</h3>
+</div>
+
+<div class="small-card">
+<p>KYC Status</p>
+<h3>Pending</h3>
+</div>
+
+<div class="small-card">
+<p>AI Bot</p>
+<h3>Inactive</h3>
+</div>
+
+</div>
+
+</div>
+
+<script type="module">
+import { supabase } from "./js/supabase.js";
+
+/* LOAD USER */
+const user = await supabase.auth.getUser();
+
+if(!user.data.user){
+window.location.href = "login.html";
+}
+
+document.getElementById("userEmail").innerText =
+user.data.user.email;
+
+/* MENU FUNCTIONS */
+window.openMenu = () => {
+document.getElementById("sidebar").classList.add("active");
+document.getElementById("overlay").classList.add("active");
+};
+
+window.closeMenu = () => {
+document.getElementById("sidebar").classList.remove("active");
+document.getElementById("overlay").classList.remove("active");
+};
+
+/* LOGOUT */
+window.logout = async () => {
+await supabase.auth.signOut();
+window.location.href = "login.html";
+};
+</script>
+
+</body>
+</html>
