@@ -39,7 +39,6 @@ color:#00c2ff;
 font-size:20px;
 }
 
-/* MENU BUTTON */
 .menu-btn{
 font-size:22px;
 cursor:pointer;
@@ -63,7 +62,20 @@ font-weight:700;
 color:#00c2ff;
 }
 
-/* RIGHT SIDEBAR MENU */
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+gap:10px;
+}
+
+.small-card{
+background:#111827;
+padding:15px;
+border-radius:12px;
+text-align:center;
+}
+
+/* RIGHT SIDEBAR */
 .sidebar{
 position:fixed;
 top:0;
@@ -93,7 +105,6 @@ color:white;
 text-decoration:none;
 background:#111827;
 border-radius:10px;
-transition:0.2s;
 }
 
 .menu a:hover{
@@ -116,27 +127,6 @@ z-index:1500;
 .overlay.active{
 display:block;
 }
-
-/* GRID */
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-gap:10px;
-}
-
-.small-card{
-background:#111827;
-padding:15px;
-border-radius:12px;
-text-align:center;
-}
-
-/* MOBILE */
-@media(max-width:768px){
-.balance{
-font-size:22px;
-}
-}
 </style>
 </head>
 
@@ -151,7 +141,7 @@ font-size:22px;
 <!-- OVERLAY -->
 <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
-<!-- RIGHT SIDEBAR -->
+<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
 
 <h3>Menu</h3>
@@ -160,14 +150,14 @@ font-size:22px;
 <a href="#">👤 My Profile</a>
 <a href="#">💰 Deposit</a>
 <a href="#">🏦 Withdraw</a>
-<a href="#">🛡 Verify KYC</a>
+<a href="#">🛡 KYC</a>
 <a href="#">⚙ Settings</a>
 <a href="#" onclick="logout()">🚪 Logout</a>
 </div>
 
 </div>
 
-<!-- MAIN CONTENT -->
+<!-- MAIN -->
 <div class="container">
 
 <div class="card">
@@ -177,24 +167,24 @@ font-size:22px;
 
 <div class="card">
 <h3>Balance</h3>
-<div class="balance">$0.00</div>
+<div class="balance" id="balance">$0.00</div>
 </div>
 
 <div class="grid">
 
 <div class="small-card">
 <p>Active Plans</p>
-<h3>0</h3>
+<h3 id="plansCount">0</h3>
 </div>
 
 <div class="small-card">
 <p>Profit</p>
-<h3>$0.00</h3>
+<h3 id="profit">$0.00</h3>
 </div>
 
 <div class="small-card">
-<p>KYC Status</p>
-<h3>Pending</h3>
+<p>KYC</p>
+<h3 id="kycStatus">Pending</h3>
 </div>
 
 <div class="small-card">
@@ -209,17 +199,68 @@ font-size:22px;
 <script type="module">
 import { supabase } from "./js/supabase.js";
 
-/* LOAD USER */
-const user = await supabase.auth.getUser();
+/* ========================
+   AUTH CHECK
+======================== */
+const { data: userData } = await supabase.auth.getUser();
+const user = userData.user;
 
-if(!user.data.user){
+if (!user) {
 window.location.href = "login.html";
 }
 
-document.getElementById("userEmail").innerText =
-user.data.user.email;
+/* ========================
+   LOAD PROFILE
+======================== */
+async function loadProfile() {
 
-/* MENU FUNCTIONS */
+const { data } = await supabase
+.from("profiles")
+.select("*")
+.eq("id", user.id)
+.single();
+
+if (data) {
+document.getElementById("userEmail").innerText = data.email;
+document.getElementById("balance").innerText = "$" + (data.balance || 0);
+}
+}
+
+/* ========================
+   LOAD PLANS
+======================== */
+async function loadPlans() {
+
+const { data } = await supabase
+.from("plans")
+.select("*")
+.eq("user_id", user.id);
+
+document.getElementById("plansCount").innerText =
+data ? data.length : 0;
+}
+
+/* ========================
+   LOAD KYC (optional field)
+======================== */
+async function loadKYC() {
+
+const { data } = await supabase
+.from("profiles")
+.select("kyc_verified")
+.eq("id", user.id)
+.single();
+
+if (data && data.kyc_verified) {
+document.getElementById("kycStatus").innerText = "Verified";
+} else {
+document.getElementById("kycStatus").innerText = "Pending";
+}
+}
+
+/* ========================
+   MENU CONTROL
+======================== */
 window.openMenu = () => {
 document.getElementById("sidebar").classList.add("active");
 document.getElementById("overlay").classList.add("active");
@@ -230,11 +271,20 @@ document.getElementById("sidebar").classList.remove("active");
 document.getElementById("overlay").classList.remove("active");
 };
 
-/* LOGOUT */
+/* ========================
+   LOGOUT
+======================== */
 window.logout = async () => {
 await supabase.auth.signOut();
 window.location.href = "login.html";
 };
+
+/* ========================
+   INIT
+======================== */
+loadProfile();
+loadPlans();
+loadKYC();
 </script>
 
 </body>
