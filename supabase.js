@@ -1,37 +1,30 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-/*
-=================================================
-SUMMITFX SUPABASE CONNECTION
-=================================================
-REPLACE THESE WITH YOUR REAL VALUES:
-- Project URL
-- Public anon key (NOT secret key)
-=================================================
-*/
+const SUPABASE_URL = "https://mybymdcjytslxihbgqnh.supabase.co";
 
-const SUPABASE_URL = "https://YOUR_PROJECT.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_PUBLIC_ANON_KEY";
+const SUPABASE_ANON_KEY =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15YnltZGNqeXRzbHhpaGJncW5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzOTYzMjMsImV4cCI6MjA5NTk3MjMyM30.5VBuL938TWC0cijFPPVdd1pG7_A1dFioQ5Bhv6SnLhs";
 
 /* CREATE SUPABASE CLIENT */
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+export const supabase = createClient(
+SUPABASE_URL,
+SUPABASE_ANON_KEY
+);
 
-/* OPTIONAL: GLOBAL SESSION CHECK HELPER */
+/* GET CURRENT USER */
 export async function getUser() {
 const { data } = await supabase.auth.getUser();
 return data?.user || null;
 }
 
-/* OPTIONAL: GET CURRENT SESSION */
+/* GET SESSION */
 export async function getSession() {
 const { data } = await supabase.auth.getSession();
 return data?.session || null;
 }
 
-/* AUTO SESSION DEBUG (REMOVE LATER IF YOU WANT) */
-supabase.auth.onAuthStateChange((event, session) => {
-console.log("Auth Event:", event);
-
+/* AUTO LOGOUT LISTENER */
+supabase.auth.onAuthStateChange((event) => {
 if (event === "SIGNED_OUT") {
 window.location.href = "login.html";
 }
