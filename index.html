@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SummitFX Investment Platform</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:#0b1220;
+color:white;
+}
+
+/* NAVBAR */
+.navbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px 60px;
+background:#0f172a;
+position:sticky;
+top:0;
+z-index:1000;
+}
+
+.logo{
+font-size:22px;
+font-weight:700;
+color:#00c2ff;
+}
+
+.nav-links a{
+color:white;
+text-decoration:none;
+margin:0 15px;
+font-weight:500;
+}
+
+.nav-links a:hover{
+color:#00c2ff;
+}
+
+.btn{
+padding:10px 18px;
+border-radius:8px;
+border:none;
+cursor:pointer;
+font-weight:600;
+}
+
+.login{
+background:transparent;
+color:white;
+border:1px solid #00c2ff;
+margin-right:10px;
+}
+
+.register{
+background:#2563eb;
+color:white;
+}
+
+/* HERO */
+.hero{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:80px 60px;
+flex-wrap:wrap;
+}
+
+.hero-text{
+max-width:500px;
+}
+
+.hero-text h1{
+font-size:42px;
+margin-bottom:15px;
+}
+
+.hero-text p{
+color:#9ca3af;
+line-height:1.6;
+}
+
+.highlight{
+color:#00c2ff;
+}
+
+.hero-box{
+background:#111827;
+padding:30px;
+border-radius:16px;
+width:300px;
+text-align:center;
+}
+
+.hero-box h2{
+color:#00c2ff;
+margin-bottom:10px;
+}
+
+/* PLANS */
+.plans{
+padding:60px;
+text-align:center;
+}
+
+.plans h2{
+margin-bottom:40px;
+}
+
+.plan-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:20px;
+}
+
+.plan{
+background:#111827;
+padding:25px;
+border-radius:15px;
+}
+
+.plan h3{
+color:#00c2ff;
+margin-bottom:10px;
+}
+
+.plan p{
+color:#9ca3af;
+margin:5px 0;
+}
+
+/* FOOTER */
+footer{
+text-align:center;
+padding:30px;
+color:#9ca3af;
+border-top:1px solid #1f2937;
+margin-top:50px;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+
+.navbar{
+flex-direction:column;
+gap:10px;
+padding:20px;
+}
+
+.hero{
+flex-direction:column;
+text-align:center;
+padding:40px 20px;
+}
+
+.hero-text h1{
+font-size:28px;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+
+<div class="logo">
+SummitFX
+</div>
+
+<div class="nav-links">
+<a href="#">Home</a>
+<a href="#plans">Plans</a>
+<a href="#">About</a>
+<a href="#">Contact</a>
+</div>
+
+<div>
+<button class="btn login" onclick="location.href='login.html'">
+Login
+</button>
+
+<button class="btn register" onclick="location.href='register.html'">
+Register
+</button>
+</div>
+
+</div>
+
+<!-- HERO -->
+<section class="hero">
+
+<div class="hero-text">
+<h1>AI Powered <span class="highlight">Investment Simulation</span> Platform</h1>
+
+<p>
+SummitFX uses advanced AI trading models to simulate portfolio growth,
+helping users explore structured investment plans with transparent performance tracking.
+</p>
+</div>
+
+<div class="hero-box">
+<h2>AI Bot Engine</h2>
+<p>Automated portfolio simulation</p>
+<p>Risk-managed AI strategies</p>
+<p>Real-time analytics dashboard</p>
+</div>
+
+</section>
+
+<!-- PLANS -->
+<section class="plans" id="plans">
+
+<h2>Investment Plans</h2>
+
+<div class="plan-grid">
+
+<div class="plan">
+<h3>$1,000 Plan</h3>
+<p>AI Bot: Starter Grid</p>
+<p>Return: x15 Simulation</p>
+</div>
+
+<div class="plan">
+<h3>$4,000 Plan</h3>
+<p>AI Bot: Trend Engine</p>
+<p>Return: x15 Simulation</p>
+</div>
+
+<div class="plan">
+<h3>$7,000 Plan</h3>
+<p>AI Bot: Smart AI Core</p>
+<p>Return: x15 Simulation</p>
+</div>
+
+<div class="plan">
+<h3>$10,000 Plan</h3>
+<p>AI Bot: Quantum AI</p>
+<p>Return: x15 Simulation</p>
+</div>
+
+</div>
+
+</section>
+
+<!-- FOOTER -->
+<footer>
+© 2026 SummitFX Investment Platform. All rights reserved.
+</footer>
+
+</body>
+</html>
