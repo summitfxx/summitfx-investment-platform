@@ -22,13 +22,15 @@ justify-content:center;
 align-items:center;
 height:100vh;
 color:white;
+padding:20px;
 }
 
 .container{
-width:380px;
+width:100%;
+max-width:400px;
 background:#111827;
 padding:30px;
-border-radius:16px;
+border-radius:15px;
 }
 
 h2{
@@ -40,7 +42,7 @@ color:#00c2ff;
 input{
 width:100%;
 padding:12px;
-margin:10px 0;
+margin-bottom:12px;
 border:none;
 border-radius:10px;
 background:#1f2937;
@@ -48,18 +50,15 @@ color:white;
 outline:none;
 }
 
-.password-wrapper{
+.password-box{
 position:relative;
 }
 
 .eye{
 position:absolute;
-right:12px;
-top:50%;
-transform:translateY(-50%);
+right:15px;
+top:12px;
 cursor:pointer;
-font-size:14px;
-color:#9ca3af;
 }
 
 button{
@@ -71,11 +70,24 @@ border-radius:10px;
 color:white;
 font-weight:600;
 cursor:pointer;
-margin-top:10px;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+.message{
+margin-top:15px;
+text-align:center;
+font-size:14px;
+}
+
+a{
+color:#00c2ff;
+text-decoration:none;
 }
 </style>
 </head>
-
 <body>
 
 <div class="container">
@@ -83,89 +95,98 @@ margin-top:10px;
 <h2>Create Account</h2>
 
 <input type="text" id="fullname" placeholder="Full Name">
+
 <input type="email" id="email" placeholder="Email">
 
-<div class="password-wrapper">
+<div class="password-box">
 <input type="password" id="password" placeholder="Password">
-<span class="eye" onclick="toggle('password', this)">👁</span>
+<span class="eye" onclick="togglePassword('password')">👁️</span>
 </div>
 
-<div class="password-wrapper">
+<div class="password-box">
 <input type="password" id="confirmPassword" placeholder="Confirm Password">
-<span class="eye" onclick="toggle('confirmPassword', this)">👁</span>
+<span class="eye" onclick="togglePassword('confirmPassword')">👁️</span>
 </div>
 
 <button onclick="signup()">Sign Up</button>
 
-<p id="msg"></p>
+<div class="message" id="message"></div>
+
+<p style="text-align:center;margin-top:15px;">
+Already have an account?
+<a href="login.html">Login</a>
+</p>
 
 </div>
 
 <script type="module">
-import { supabase } from "./js/supabase.js";
 
-/* TOGGLE PASSWORD */
-window.toggle = (id, el) => {
+/* IMPORTANT:
+   If supabase.js is in the root folder use:
+*/
+import { supabase } from "./supabase.js";
+
+/*
+If your file is inside a js folder use:
+import { supabase } from "./js/supabase.js";
+*/
+
+window.togglePassword = (id) => {
 const input = document.getElementById(id);
 input.type = input.type === "password" ? "text" : "password";
-el.textContent = input.type === "password" ? "👁" : "🙈";
 };
 
-/* SIGNUP */
 window.signup = async () => {
 
-const fullname = document.getElementById("fullname").value;
-const email = document.getElementById("email").value;
+const fullname = document.getElementById("fullname").value.trim();
+const email = document.getElementById("email").value.trim();
 const password = document.getElementById("password").value;
 const confirmPassword = document.getElementById("confirmPassword").value;
+const message = document.getElementById("message");
 
-const msg = document.getElementById("msg");
+message.innerHTML = "";
 
 if (!fullname || !email || !password || !confirmPassword) {
-msg.innerText = "Fill all fields";
+message.innerHTML = "Please fill in all fields.";
 return;
 }
 
 if (password !== confirmPassword) {
-msg.innerText = "Passwords do not match";
+message.innerHTML = "Passwords do not match.";
 return;
 }
 
-/* STEP 1: CREATE USER */
+try {
+
 const { data, error } = await supabase.auth.signUp({
 email,
 password
 });
 
+console.log("Signup Data:", data);
+console.log("Signup Error:", error);
+
 if (error) {
-msg.innerText = error.message;
+message.innerHTML = error.message;
 return;
 }
 
-/* SAFE USER CHECK */
-const user = data?.user || data?.session?.user;
+message.innerHTML = "Account created successfully.";
 
-if (!user) {
-msg.innerText = "Check your email to confirm account";
-return;
-}
-
-/* STEP 2: CREATE PROFILE */
-await supabase.from("profiles").insert([
-{
-id: user.id,
-full_name: fullname,
-email: email,
-balance: 0
-}
-]);
-
-msg.innerText = "Account created successfully!";
 setTimeout(() => {
 window.location.href = "login.html";
 }, 1500);
 
+} catch(err) {
+
+console.error(err);
+message.innerHTML =
+"Unexpected error. Check browser console (F12).";
+
+}
+
 };
+
 </script>
 
 </body>
