@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SummitFX - Sign Up</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:#0b1220;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+color:white;
+}
+
+.container{
+width:380px;
+background:#111827;
+padding:30px;
+border-radius:16px;
+box-shadow:0 10px 30px rgba(0,0,0,0.4);
+}
+
+h2{
+text-align:center;
+margin-bottom:20px;
+color:#00c2ff;
+}
+
+input{
+width:100%;
+padding:12px;
+margin:10px 0;
+border:none;
+border-radius:10px;
+background:#1f2937;
+color:white;
+outline:none;
+}
+
+.password-wrapper{
+position:relative;
+}
+
+.eye{
+position:absolute;
+right:12px;
+top:50%;
+transform:translateY(-50%);
+cursor:pointer;
+font-size:14px;
+color:#9ca3af;
+user-select:none;
+}
+
+button{
+width:100%;
+padding:12px;
+background:#2563eb;
+border:none;
+border-radius:10px;
+color:white;
+font-weight:600;
+cursor:pointer;
+margin-top:10px;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+p{
+text-align:center;
+margin-top:15px;
+font-size:14px;
+color:#9ca3af;
+}
+
+a{
+color:#00c2ff;
+text-decoration:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Create Account</h2>
+
+<input type="text" id="fullname" placeholder="Full Name">
+<input type="email" id="email" placeholder="Email">
+
+<!-- PASSWORD -->
+<div class="password-wrapper">
+<input type="password" id="password" placeholder="Password">
+<span class="eye" onclick="togglePassword('password', this)">👁</span>
+</div>
+
+<!-- CONFIRM PASSWORD -->
+<div class="password-wrapper">
+<input type="password" id="confirmPassword" placeholder="Confirm Password">
+<span class="eye" onclick="togglePassword('confirmPassword', this)">👁</span>
+</div>
+
+<button onclick="signup()">Sign Up</button>
+
+<p>
+Already have an account?
+<a href="login.html">Login</a>
+</p>
+
+</div>
+
+<script type="module">
+import { supabase } from "./js/supabase.js";
+
+/* TOGGLE PASSWORD VISIBILITY */
+window.togglePassword = (id, el) => {
+const input = document.getElementById(id);
+
+if (input.type === "password") {
+input.type = "text";
+el.textContent = "🙈";
+} else {
+input.type = "password";
+el.textContent = "👁";
+}
+};
+
+/* SIGNUP FUNCTION */
+window.signup = async () => {
+
+const fullname = document.getElementById("fullname").value;
+const email = document.getElementById("email").value;
+const password = document.getElementById("password").value;
+const confirmPassword = document.getElementById("confirmPassword").value;
+
+if (!fullname || !email || !password || !confirmPassword) {
+alert("Please fill all fields");
+return;
+}
+
+if (password !== confirmPassword) {
+alert("Passwords do not match");
+return;
+}
+
+/* CREATE USER */
+const { data, error } = await supabase.auth.signUp({
+email,
+password
+});
+
+if (error) {
+alert(error.message);
+return;
+}
+
+/* CREATE PROFILE */
+await supabase.from("profiles").insert([
+{
+id: data.user.id,
+full_name: fullname,
+email: email,
+balance: 0
+}
+]);
+
+alert("Account created! Check your email to confirm.");
+window.location.href = "login.html";
+};
+</script>
+
+</body>
+</html>
