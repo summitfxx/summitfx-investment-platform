@@ -1,13 +1,16 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SummitFX - Login</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>SummitFX Investment - Login</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
+
 *{
 margin:0;
 padding:0;
@@ -17,36 +20,69 @@ font-family:'Poppins',sans-serif;
 
 body{
 background:#0b1220;
+min-height:100vh;
 display:flex;
 justify-content:center;
 align-items:center;
-height:100vh;
-color:white;
+padding:20px;
+color:#fff;
 }
 
 .container{
-width:380px;
-background:#111827;
-padding:30px;
-border-radius:16px;
-box-shadow:0 10px 30px rgba(0,0,0,0.4);
+width:100%;
+max-width:460px;
+background:#151e2e;
+padding:40px;
+border-radius:20px;
+box-shadow:0 15px 40px rgba(0,0,0,.4);
+border:1px solid rgba(255,255,255,.05);
+}
+
+.logo{
+text-align:center;
+font-size:28px;
+font-weight:800;
+color:#f5a623;
+margin-bottom:10px;
+}
+
+.subtitle{
+text-align:center;
+color:#94a3b8;
+margin-bottom:30px;
+font-size:14px;
 }
 
 h2{
 text-align:center;
-margin-bottom:20px;
-color:#00c2ff;
+margin-bottom:25px;
+font-size:28px;
+font-weight:700;
+}
+
+.input-group{
+margin-bottom:15px;
 }
 
 input{
 width:100%;
-padding:12px;
-margin:10px 0;
+padding:14px 16px;
 border:none;
-border-radius:10px;
-background:#1f2937;
-color:white;
+border-radius:12px;
+background:#0f172a;
+color:#fff;
 outline:none;
+font-size:15px;
+border:1px solid transparent;
+transition:.3s;
+}
+
+input:focus{
+border-color:#f5a623;
+}
+
+input::placeholder{
+color:#64748b;
 }
 
 .password-wrapper{
@@ -55,42 +91,49 @@ position:relative;
 
 .eye{
 position:absolute;
-right:12px;
+right:15px;
 top:50%;
 transform:translateY(-50%);
 cursor:pointer;
-font-size:14px;
-color:#9ca3af;
+font-size:18px;
 user-select:none;
 }
 
 button{
 width:100%;
-padding:12px;
-background:#2563eb;
+padding:15px;
 border:none;
-border-radius:10px;
-color:white;
-font-weight:600;
+border-radius:12px;
+background:#f5a623;
+color:#000;
+font-size:16px;
+font-weight:700;
 cursor:pointer;
-margin-top:10px;
+transition:.3s;
+margin-top:5px;
 }
 
 button:hover{
-background:#1d4ed8;
+transform:translateY(-2px);
 }
 
-p{
+.bottom-text{
 text-align:center;
-margin-top:15px;
+margin-top:20px;
+color:#94a3b8;
 font-size:14px;
-color:#9ca3af;
 }
 
-a{
-color:#00c2ff;
+.bottom-text a{
+color:#f5a623;
 text-decoration:none;
+font-weight:600;
 }
+
+.bottom-text a:hover{
+text-decoration:underline;
+}
+
 </style>
 </head>
 
@@ -98,22 +141,33 @@ text-decoration:none;
 
 <div class="container">
 
-<h2>Login to SummitFX</h2>
+<div class="logo">
+SummitFX Investment
+</div>
 
-<input type="email" id="email" placeholder="Email">
+<div class="subtitle">
+Access your investment dashboard
+</div>
 
-<!-- PASSWORD -->
-<div class="password-wrapper">
+<h2>Welcome Back</h2>
+
+<div class="input-group">
+<input type="email" id="email" placeholder="Email Address">
+</div>
+
+<div class="input-group password-wrapper">
 <input type="password" id="password" placeholder="Password">
 <span class="eye" onclick="togglePassword()">👁</span>
 </div>
 
-<button onclick="login()">Login</button>
+<button onclick="login()">
+Login
+</button>
 
-<p>
+<div class="bottom-text">
 Don't have an account?
 <a href="signup.html">Sign Up</a>
-</p>
+</div>
 
 </div>
 
@@ -168,3 +222,4 @@ alert("Login failed. Try again.");
 
 </body>
 </html>
+```
