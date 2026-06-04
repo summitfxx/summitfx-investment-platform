@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SummitFX Investment - Register</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:#0b1220;
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:20px;
+color:#fff;
+}
+
+.container{
+width:100%;
+max-width:460px;
+background:#151e2e;
+padding:40px;
+border-radius:20px;
+box-shadow:0 15px 40px rgba(0,0,0,.4);
+border:1px solid rgba(255,255,255,.05);
+}
+
+.logo{
+text-align:center;
+font-size:28px;
+font-weight:800;
+color:#f5a623;
+margin-bottom:10px;
+}
+
+.subtitle{
+text-align:center;
+color:#94a3b8;
+margin-bottom:30px;
+font-size:14px;
+}
+
+h2{
+text-align:center;
+margin-bottom:25px;
+font-size:28px;
+font-weight:700;
+}
+
+.input-group{
+margin-bottom:15px;
+}
+
+input{
+width:100%;
+padding:14px 16px;
+border:none;
+border-radius:12px;
+background:#0f172a;
+color:#fff;
+outline:none;
+font-size:15px;
+border:1px solid transparent;
+transition:.3s;
+}
+
+input:focus{
+border-color:#f5a623;
+}
+
+input::placeholder{
+color:#64748b;
+}
+
+.password-box{
+position:relative;
+}
+
+.eye{
+position:absolute;
+right:15px;
+top:50%;
+transform:translateY(-50%);
+cursor:pointer;
+font-size:18px;
+}
+
+button{
+width:100%;
+padding:15px;
+border:none;
+border-radius:12px;
+background:#f5a623;
+color:#000;
+font-size:16px;
+font-weight:700;
+cursor:pointer;
+transition:.3s;
+margin-top:5px;
+}
+
+button:hover{
+transform:translateY(-2px);
+}
+
+.message{
+margin-top:15px;
+text-align:center;
+font-size:14px;
+color:#f5a623;
+}
+
+.login-text{
+text-align:center;
+margin-top:20px;
+color:#94a3b8;
+font-size:14px;
+}
+
+.login-text a{
+color:#f5a623;
+text-decoration:none;
+font-weight:600;
+}
+
+.login-text a:hover{
+text-decoration:underline;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">
+SummitFX Investment
+</div>
+
+<div class="subtitle">
+Create your investment account
+</div>
+
+<h2>Create Account</h2>
+
+<div class="input-group">
+<input type="text" id="fullname" placeholder="Full Name">
+</div>
+
+<div class="input-group">
+<input type="email" id="email" placeholder="Email Address">
+</div>
+
+<div class="input-group password-box">
+<input type="password" id="password" placeholder="Password">
+<span class="eye" onclick="togglePassword('password')">👁️</span>
+</div>
+
+<div class="input-group password-box">
+<input type="password" id="confirmPassword" placeholder="Confirm Password">
+<span class="eye" onclick="togglePassword('confirmPassword')">👁️</span>
+</div>
+
+<button onclick="signup()">
+Create Account
+</button>
+
+<div class="message" id="message"></div>
+
+<div class="login-text">
+Already have an account?
+<a href="login.html">Login</a>
+</div>
+
+</div>
+
+<script type="module">
+
+import { supabase } from "./supabase.js";
+
+window.togglePassword = (id) => {
+const input = document.getElementById(id);
+input.type = input.type === "password" ? "text" : "password";
+};
+
+window.signup = async () => {
+
+const fullname = document.getElementById("fullname").value.trim();
+const email = document.getElementById("email").value.trim();
+const password = document.getElementById("password").value;
+const confirmPassword = document.getElementById("confirmPassword").value;
+const message = document.getElementById("message");
+
+message.innerHTML = "";
+
+if (!fullname || !email || !password || !confirmPassword) {
+message.innerHTML = "Please fill in all fields.";
+return;
+}
+
+if (password !== confirmPassword) {
+message.innerHTML = "Passwords do not match.";
+return;
+}
+
+try {
+
+const { data, error } = await supabase.auth.signUp({
+email,
+password
+});
+
+console.log("Signup Data:", data);
+console.log("Signup Error:", error);
+
+if (error) {
+message.innerHTML = error.message;
+return;
+}
+
+message.innerHTML = "Account created successfully.";
+
+setTimeout(() => {
+window.location.href = "login.html";
+}, 1500);
+
+} catch(err) {
+
+console.error(err);
+message.innerHTML =
+"Unexpected error. Check browser console (F12).";
+
+}
+
+};
+
+</script>
+
+</body>
+</html>
