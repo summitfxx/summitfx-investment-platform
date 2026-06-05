@@ -5,11 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - SummitFX Investment</title>
     
-    <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -37,7 +34,6 @@
             min-height: 100vh;
         }
 
-        /* --- Scrollbar --- */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-secondary); }
         ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
@@ -126,9 +122,7 @@
         .welcome p { color: var(--text-secondary); }
 
         /* --- Top-Right Dropdown Menu --- */
-        .user-menu-wrapper {
-            position: relative;
-        }
+        .user-menu-wrapper { position: relative; }
 
         .user-avatar-btn {
             width: 46px;
@@ -177,7 +171,6 @@
             transform: translateY(0);
         }
 
-        /* Arrow pointer */
         .dropdown-menu::before {
             content: '';
             position: absolute;
@@ -196,10 +189,7 @@
             border-bottom: 1px solid var(--border-color);
             margin-bottom: 6px;
         }
-        .dropdown-header .greeting {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
+        .dropdown-header .greeting { font-size: 13px; color: var(--text-secondary); }
         .dropdown-header .email {
             font-size: 14px;
             font-weight: 600;
@@ -231,17 +221,9 @@
             color: var(--accent-gold);
         }
 
-        .dropdown-item i {
-            width: 18px;
-            text-align: center;
-            font-size: 15px;
-        }
+        .dropdown-item i { width: 18px; text-align: center; font-size: 15px; }
 
-        .dropdown-divider {
-            height: 1px;
-            background: var(--border-color);
-            margin: 6px 0;
-        }
+        .dropdown-divider { height: 1px; background: var(--border-color); margin: 6px 0; }
 
         .dropdown-item.danger:hover {
             background: rgba(239, 68, 68, 0.1);
@@ -269,10 +251,8 @@
         .stat-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
             background: linear-gradient(90deg, var(--accent-gold), transparent);
             opacity: 0;
             transition: opacity 0.25s;
@@ -296,6 +276,194 @@
         }
         .stat-card h3 { color: var(--text-secondary); font-size: 14px; font-weight: 500; margin-bottom: 8px; }
         .stat-card .value { font-size: 28px; font-weight: 700; }
+
+        /* --- Investment Plans Section (NEW) --- */
+        .plans-section {
+            margin-bottom: 32px;
+        }
+
+        .plans-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .plans-header-left h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .plans-header-left p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .plans-header-left .highlight {
+            color: var(--accent-gold);
+            font-weight: 600;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .plan-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 24px;
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .plan-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-gold), transparent);
+            opacity: 0.6;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--accent-gold);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.35), 0 0 20px rgba(245, 166, 35, 0.1);
+        }
+        .plan-card:hover::before { opacity: 1; }
+
+        .plan-card.popular {
+            border-color: var(--accent-gold);
+            background: linear-gradient(180deg, rgba(245, 166, 35, 0.06), var(--bg-card) 50%);
+        }
+
+        .popular-tag {
+            position: absolute;
+            top: 14px; right: 14px;
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            padding: 3px 10px;
+            border-radius: 50px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .plan-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .plan-icon {
+            width: 44px; height: 44px;
+            background: rgba(245, 166, 35, 0.1);
+            color: var(--accent-gold);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+
+        .plan-name {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .plan-duration {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .plan-amounts {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 14px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            margin-bottom: 16px;
+        }
+
+        .plan-invest-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .plan-invest-value {
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .plan-return-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--success);
+            text-align: right;
+        }
+
+        .plan-roi {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+            border-top: 1px dashed var(--border-color);
+            margin-bottom: 16px;
+        }
+
+        .plan-roi .roi-value {
+            color: var(--accent-gold);
+            font-weight: 700;
+        }
+
+        .plan-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .plan-btn:hover {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(245, 166, 35, 0.3);
+        }
+
+        .plan-card.popular .plan-btn {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+        }
+
+        .plan-card.popular .plan-btn:hover {
+            background: var(--accent-gold-hover);
+        }
 
         /* --- Tables --- */
         .content-section {
@@ -324,6 +492,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            font-size: 14px;
         }
         .btn-gold:hover { 
             background: var(--accent-gold-hover); 
@@ -351,7 +520,6 @@
         .status-pending { background: rgba(245, 166, 35, 0.1); color: var(--accent-gold); }
         .status-completed { background: rgba(100, 116, 139, 0.2); color: var(--text-secondary); }
 
-        /* Mobile menu toggle */
         .mobile-menu-toggle {
             display: none;
             background: var(--bg-card);
@@ -364,7 +532,6 @@
             font-size: 18px;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
@@ -377,7 +544,7 @@
 </head>
 <body>
 
-    <!-- Sidebar Navigation -->
+    <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <div class="logo">Summit<span>FX</span></div>
         <nav class="nav-menu">
@@ -392,7 +559,7 @@
         </button>
     </aside>
 
-    <!-- Main Content Area -->
+    <!-- Main Content -->
     <main class="main-content">
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 16px;">
@@ -405,7 +572,7 @@
                 </div>
             </div>
 
-            <!-- Top-Right Dropdown Menu -->
+            <!-- Top-Right Dropdown -->
             <div class="user-menu-wrapper">
                 <div class="user-avatar-btn" id="user-avatar-btn" onclick="toggleDropdown()">U</div>
                 <div class="dropdown-menu" id="dropdown-menu">
@@ -413,23 +580,13 @@
                         <div class="greeting">Signed in as</div>
                         <div class="email" id="user-email">Loading...</div>
                     </div>
-                    <a href="profile.html" class="dropdown-item">
-                        <i class="fas fa-user"></i> My Profile
-                    </a>
-                    <a href="kyc.html" class="dropdown-item">
-                        <i class="fas fa-id-card"></i> Verify KYC
-                    </a>
+                    <a href="profile.html" class="dropdown-item"><i class="fas fa-user"></i> My Profile</a>
+                    <a href="kyc.html" class="dropdown-item"><i class="fas fa-id-card"></i> Verify KYC</a>
                     <div class="dropdown-divider"></div>
-                    <a href="deposit.html" class="dropdown-item">
-                        <i class="fas fa-arrow-down"></i> Deposit
-                    </a>
-                    <a href="withdraw.html" class="dropdown-item">
-                        <i class="fas fa-arrow-up"></i> Withdraw
-                    </a>
+                    <a href="deposit.html" class="dropdown-item"><i class="fas fa-arrow-down"></i> Deposit</a>
+                    <a href="withdraw.html" class="dropdown-item"><i class="fas fa-arrow-up"></i> Withdraw</a>
                     <div class="dropdown-divider"></div>
-                    <a href="settings.html" class="dropdown-item">
-                        <i class="fas fa-cog"></i> Settings
-                    </a>
+                    <a href="settings.html" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
                     <div class="dropdown-divider"></div>
                     <button class="dropdown-item danger" onclick="handleLogout()">
                         <i class="fas fa-sign-out-alt"></i> Log Out
@@ -461,6 +618,132 @@
                 <div class="value" id="stat-deposits">$0.00</div>
             </div>
         </div>
+
+        <!-- 🚀 NEW: Investment Plans Section -->
+        <section class="plans-section">
+            <div class="plans-header">
+                <div class="plans-header-left">
+                    <h2><i class="fas fa-fire" style="color: var(--accent-gold);"></i> Investment Plans</h2>
+                    <p>Choose a plan and earn up to <span class="highlight">1,900% ROI</span> in just <span class="highlight">48 hours</span></p>
+                </div>
+                <a href="deposit.html" class="btn-gold">View All Plans <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <div class="plans-grid">
+                <!-- Starter -->
+                <div class="plan-card">
+                    <div class="plan-top">
+                        <div class="plan-icon"><i class="fas fa-seedling"></i></div>
+                        <div>
+                            <div class="plan-name">Starter</div>
+                            <div class="plan-duration"><i class="far fa-clock"></i> 48 Hours</div>
+                        </div>
+                    </div>
+                    <div class="plan-amounts">
+                        <div>
+                            <div class="plan-invest-label">Invest</div>
+                            <div class="plan-invest-value">$500</div>
+                        </div>
+                        <div>
+                            <div class="plan-invest-label">Return</div>
+                            <div class="plan-return-value">$10K</div>
+                        </div>
+                    </div>
+                    <div class="plan-roi">
+                        <span>Net Profit</span>
+                        <span class="roi-value">+$9,500</span>
+                    </div>
+                    <a href="deposit.html?plan=starter" class="plan-btn">
+                        Invest Now <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <!-- Silver -->
+                <div class="plan-card">
+                    <div class="plan-top">
+                        <div class="plan-icon"><i class="fas fa-gem"></i></div>
+                        <div>
+                            <div class="plan-name">Silver</div>
+                            <div class="plan-duration"><i class="far fa-clock"></i> 48 Hours</div>
+                        </div>
+                    </div>
+                    <div class="plan-amounts">
+                        <div>
+                            <div class="plan-invest-label">Invest</div>
+                            <div class="plan-invest-value">$1,000</div>
+                        </div>
+                        <div>
+                            <div class="plan-invest-label">Return</div>
+                            <div class="plan-return-value">$20K</div>
+                        </div>
+                    </div>
+                    <div class="plan-roi">
+                        <span>Net Profit</span>
+                        <span class="roi-value">+$19,000</span>
+                    </div>
+                    <a href="deposit.html?plan=silver" class="plan-btn">
+                        Invest Now <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <!-- Gold (Popular) -->
+                <div class="plan-card popular">
+                    <div class="popular-tag"><i class="fas fa-fire"></i> HOT</div>
+                    <div class="plan-top">
+                        <div class="plan-icon"><i class="fas fa-crown"></i></div>
+                        <div>
+                            <div class="plan-name">Gold</div>
+                            <div class="plan-duration"><i class="far fa-clock"></i> 48 Hours</div>
+                        </div>
+                    </div>
+                    <div class="plan-amounts">
+                        <div>
+                            <div class="plan-invest-label">Invest</div>
+                            <div class="plan-invest-value">$5,000</div>
+                        </div>
+                        <div>
+                            <div class="plan-invest-label">Return</div>
+                            <div class="plan-return-value">$100K</div>
+                        </div>
+                    </div>
+                    <div class="plan-roi">
+                        <span>Net Profit</span>
+                        <span class="roi-value">+$95,000</span>
+                    </div>
+                    <a href="deposit.html?plan=gold" class="plan-btn">
+                        Invest Now <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <!-- VIP -->
+                <div class="plan-card">
+                    <div class="plan-top">
+                        <div class="plan-icon"><i class="fas fa-rocket"></i></div>
+                        <div>
+                            <div class="plan-name">VIP</div>
+                            <div class="plan-duration"><i class="far fa-clock"></i> 48 Hours</div>
+                        </div>
+                    </div>
+                    <div class="plan-amounts">
+                        <div>
+                            <div class="plan-invest-label">Invest</div>
+                            <div class="plan-invest-value">$20,000</div>
+                        </div>
+                        <div>
+                            <div class="plan-invest-label">Return</div>
+                            <div class="plan-return-value">$400K</div>
+                        </div>
+                    </div>
+                    <div class="plan-roi">
+                        <span>Net Profit</span>
+                        <span class="roi-value">+$380,000</span>
+                    </div>
+                    <a href="deposit.html?plan=vip" class="plan-btn">
+                        Invest Now <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
 
         <!-- Active Investments Table -->
         <div class="content-section">
@@ -515,15 +798,10 @@
     </main>
 
     <script>
-        // --- SUPABASE CONFIGURATION ---
         const SUPABASE_URL = 'https://mybymdcjytslxihbgqnh.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15YnltZGNqeXRzbHhpaGJncW5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzOTYzMjMsImV4cCI6MjA5NTk3MjMyM30.5VBuL938TWC0cijFPPVdd1pG7_A1dFioQ5Bhv6SnLhs';
-        
-        const PAYMENT_PUBLISHABLE_KEY = 'sb_publishable_hSuZo9mYJF0fX2gda5QvVg_657VzXuu'; 
-
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- DROPDOWN MENU LOGIC ---
         const avatarBtn = document.getElementById('user-avatar-btn');
         const dropdownMenu = document.getElementById('dropdown-menu');
 
@@ -532,7 +810,6 @@
             avatarBtn.classList.toggle('active');
         }
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.user-menu-wrapper')) {
                 dropdownMenu.classList.remove('show');
@@ -540,7 +817,6 @@
             }
         });
 
-        // Close dropdown on ESC key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 dropdownMenu.classList.remove('show');
@@ -548,27 +824,22 @@
             }
         });
 
-        // --- MOBILE SIDEBAR TOGGLE ---
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
         }
 
-        // --- AUTHENTICATION CHECK ---
         async function checkAuth() {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            
             if (!session) {
                 window.location.href = 'index.html'; 
             } else {
                 const email = session.user.email;
                 document.getElementById('user-email').innerText = email;
                 avatarBtn.innerText = email.charAt(0).toUpperCase();
-                
                 await fetchUserData(session.user.id);
             }
         }
 
-        // --- FETCH USER DATA ---
         async function fetchUserData(userId) {
             try {
                 console.log("User authenticated. Ready to fetch data for ID:", userId);
@@ -577,13 +848,11 @@
             }
         }
 
-        // --- LOGOUT FUNCTION ---
         async function handleLogout() {
             await supabaseClient.auth.signOut();
             window.location.href = 'index.html';
         }
 
-        // Initialize auth check when page loads
         checkAuth();
     </script>
 </body>
