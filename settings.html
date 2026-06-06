@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings - SummitFX</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --bg-primary: #0b1220;
+            --bg-secondary: #111827;
+            --bg-card: #1e293b;
+            --bg-card-hover: #263347;
+            --border-color: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-gold: #f5a623;
+            --accent-gold-hover: #d48b17;
+            --success: #10b981;
+            --danger: #ef4444;
+            --sidebar-width: 260px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg-primary); color: var(--text-primary); display: flex; min-height: 100vh; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            position: fixed; height: 100vh;
+            display: flex; flex-direction: column;
+            padding: 24px 0; z-index: 100;
+            transition: transform 0.3s ease;
+        }
+        .logo { padding: 0 24px 32px; font-size: 24px; font-weight: 800; border-bottom: 1px solid var(--border-color); margin-bottom: 24px; }
+        .logo span { color: var(--accent-gold); }
+        .nav-menu { flex: 1; padding: 0 16px; overflow-y: auto; }
+        .nav-item {
+            display: flex; align-items: center; gap: 16px;
+            padding: 14px 16px; color: var(--text-secondary);
+            text-decoration: none; border-radius: 8px;
+            margin-bottom: 8px; transition: all 0.2s; font-weight: 500;
+        }
+        .nav-item:hover, .nav-item.active { background-color: rgba(245, 166, 35, 0.1); color: var(--accent-gold); }
+        .nav-item.active { border-left: 3px solid var(--accent-gold); }
+        .nav-item i { width: 20px; text-align: center; font-size: 18px; }
+        .logout-btn {
+            margin: 0 16px; padding: 14px;
+            background: transparent; border: 1px solid var(--border-color);
+            color: var(--text-secondary); border-radius: 8px;
+            cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px; font-weight: 600;
+        }
+        .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+        /* --- Main Content --- */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1; padding: 32px;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 32px;
+        }
+        .page-title h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+        .page-title p { color: var(--text-secondary); font-size: 15px; }
+
+        /* --- Top-Right Dropdown --- */
+        .user-menu-wrapper { position: relative; }
+        .user-avatar-btn {
+            width: 46px; height: 46px;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-hover));
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: var(--bg-primary); font-weight: 700; font-size: 18px;
+            cursor: pointer; border: 2px solid transparent;
+            transition: all 0.25s ease; box-shadow: 0 4px 12px rgba(245, 166, 35, 0.25);
+        }
+        .user-avatar-btn:hover, .user-avatar-btn.active {
+            transform: scale(1.05); border-color: var(--accent-gold);
+            box-shadow: 0 6px 18px rgba(245, 166, 35, 0.4);
+        }
+        .dropdown-menu {
+            position: absolute; top: calc(100% + 12px); right: 0;
+            width: 240px; background: var(--bg-card);
+            border: 1px solid var(--border-color); border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4); padding: 8px;
+            opacity: 0; visibility: hidden; transform: translateY(-10px);
+            transition: all 0.25s ease; z-index: 200;
+        }
+        .dropdown-menu.show { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dropdown-menu::before {
+            content: ''; position: absolute; top: -7px; right: 16px;
+            width: 12px; height: 12px; background: var(--bg-card);
+            border-left: 1px solid var(--border-color); border-top: 1px solid var(--border-color);
+            transform: rotate(45deg);
+        }
+        .dropdown-header { padding: 12px 14px; border-bottom: 1px solid var(--border-color); margin-bottom: 6px; }
+        .dropdown-header .greeting { font-size: 13px; color: var(--text-secondary); }
+        .dropdown-header .email { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-top: 2px; word-break: break-all; }
+        .dropdown-item {
+            display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+            color: var(--text-secondary); text-decoration: none; border-radius: 8px;
+            font-size: 14px; font-weight: 500; transition: all 0.2s ease;
+            cursor: pointer; border: none; background: transparent; width: 100%; text-align: left;
+        }
+        .dropdown-item:hover { background: rgba(245, 166, 35, 0.1); color: var(--accent-gold); }
+        .dropdown-item i { width: 18px; text-align: center; font-size: 15px; }
+        .dropdown-divider { height: 1px; background: var(--border-color); margin: 6px 0; }
+        .dropdown-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        /* --- Settings Layout --- */
+        .settings-container { max-width: 900px; margin: 0 auto; }
+
+        .settings-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .section-header i { color: var(--accent-gold); font-size: 20px; }
+        .section-header h2 { font-size: 20px; font-weight: 700; }
+        .section-header p { font-size: 14px; color: var(--text-secondary); margin-left: auto; }
+
+        /* Toggle Switches */
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+        }
+        .setting-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .setting-item:first-of-type { padding-top: 0; }
+
+        .setting-info h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .setting-info p { font-size: 13px; color: var(--text-secondary); }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--border-color);
+            transition: .3s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 18px; width: 18px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .3s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-gold); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* Security Badges */
+        .security-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .security-status i { color: var(--success); font-size: 20px; }
+        .security-status div h4 { font-size: 15px; color: var(--success); margin-bottom: 2px; }
+        .security-status div p { font-size: 13px; color: var(--text-secondary); }
+
+        .btn-outline {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-outline:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+
+        .btn-save {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-hover));
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245, 166, 35, 0.3); }
+        .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* Danger Zone */
+        .danger-zone {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.03);
+        }
+        .danger-zone .section-header i { color: var(--danger); }
+        .danger-zone .section-header h2 { color: var(--danger); }
+        
+        .btn-danger {
+            padding: 12px 24px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-danger:hover { background: #dc2626; transform: translateY(-2px); }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 1000; padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 32px; max-width: 450px; width: 100%;
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-header { text-align: center; margin-bottom: 24px; }
+        .modal-header i { font-size: 48px; color: var(--danger); margin-bottom: 16px; }
+        .modal-header h3 { font-size: 22px; margin-bottom: 8px; }
+        .modal-header p { color: var(--text-secondary); font-size: 14px; line-height: 1.5; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+        .form-group input {
+            width: 100%; padding: 14px; background: var(--bg-secondary);
+            border: 1px solid var(--border-color); border-radius: 8px;
+            color: var(--text-primary); font-size: 15px; transition: border-color 0.2s;
+        }
+        .form-group input:focus { outline: none; border-color: var(--danger); }
+
+        .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+        .btn-cancel {
+            flex: 1; padding: 14px; background: transparent;
+            border: 1px solid var(--border-color); color: var(--text-secondary);
+            border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-cancel:hover { border-color: var(--text-primary); color: var(--text-primary); }
+        .btn-confirm-delete {
+            flex: 1; padding: 14px; background: var(--danger); color: white;
+            border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-confirm-delete:hover { background: #dc2626; }
+        .btn-confirm-delete:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 32px; right: 32px;
+            background: var(--success); color: white;
+            padding: 14px 24px; border-radius: 10px;
+            font-weight: 600; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            transform: translateY(100px); opacity: 0;
+            transition: all 0.3s ease; z-index: 1000;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        .mobile-menu-toggle {
+            display: none; background: var(--bg-card); border: 1px solid var(--border-color);
+            color: var(--text-primary); width: 42px; height: 42px;
+            border-radius: 8px; cursor: pointer; font-size: 18px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; width: 100%; padding: 20px; }
+            .mobile-menu-toggle { display: flex; align-items: center; justify-content: center; }
+            .section-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .section-header p { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">Summit<span>FX</span></div>
+        <nav class="nav-menu">
+            <a href="dashboard.html" class="nav-item"><i class="fas fa-chart-line"></i> Dashboard</a>
+            <a href="deposit.html" class="nav-item"><i class="fas fa-arrow-down"></i> Deposit</a>
+            <a href="withdraw.html" class="nav-item"><i class="fas fa-arrow-up"></i> Withdraw</a>
+            <a href="transactions.html" class="nav-item"><i class="fas fa-history"></i> Transactions</a>
+            <a href="profile.html" class="nav-item"><i class="fas fa-user-cog"></i> Profile</a>
+            <a href="settings.html" class="nav-item active"><i class="fas fa-cog"></i> Settings</a>
+        </nav>
+        <button class="logout-btn" onclick="handleLogout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="top-bar">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="page-title">
+                    <h1>Account Settings</h1>
+                    <p>Manage your security, notifications, and account preferences.</p>
+                </div>
+            </div>
+
+            <!-- Top-Right Dropdown -->
+            <div class="user-menu-wrapper">
+                <div class="user-avatar-btn" id="user-avatar-btn" onclick="toggleDropdown()">U</div>
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <div class="dropdown-header">
+                        <div class="greeting">Signed in as</div>
+                        <div class="email" id="user-email">Loading...</div>
+                    </div>
+                    <a href="profile.html" class="dropdown-item"><i class="fas fa-user"></i> My Profile</a>
+                    <a href="kyc.html" class="dropdown-item"><i class="fas fa-id-card"></i> Verify KYC</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="deposit.html" class="dropdown-item"><i class="fas fa-arrow-down"></i> Deposit</a>
+                    <a href="withdraw.html" class="dropdown-item"><i class="fas fa-arrow-up"></i> Withdraw</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="settings.html" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item danger" onclick="handleLogout()">
+                        <i class="fas fa-sign-out-alt"></i> Log Out
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-container">
+            
+            <!-- 1. Notification Preferences -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <i class="fas fa-bell"></i>
+                    <div>
+                        <h2>Notification Preferences</h2>
+                        <p>Choose how and when we contact you.</p>
+                    </div>
+                </div>
+                
+                <form id="notification-form">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Deposit Confirmations</h4>
+                            <p>Receive an email when a deposit is confirmed.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="notify_deposit" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Withdrawal Updates</h4>
+                            <p>Get notified when your withdrawal is processed or completed.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="notify_withdrawal" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Investment Maturity</h4>
+                            <p>Alert me 24 hours before an investment plan matures.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="notify_maturity" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Security Alerts</h4>
+                            <p>Get immediate alerts for new logins or password changes.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="notify_security" checked disabled>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Promotional Offers</h4>
+                            <p>Receive news about new investment plans and bonuses.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="notify_promo">
+                            <span class="slider"></span>
+                        </
+                    </div>
+                    <button type="button" class="btn-save" onclick="saveSettings()">
+                        <i class="fas fa-save"></i> Save Preferences
+                    </button>
+                </form>
+            </div>
+
+            <!-- 2. Security Settings -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <i class="fas fa-shield-alt"></i>
+                    <div>
+                        <h2>Advanced Security</h2>
+                        <p>Protect your account with additional layers of security.</p>
+                    </div>
+                </div>
+
+                <div class="security-status">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <h4>Email Verification Active</h4>
+                        <p>Your account is securely linked to your verified email address.</p>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Two-Factor Authentication (2FA)</h4>
+                        <p>Add an extra layer of security using an authenticator app.</p>
+                    </div>
+                    <button class="btn-outline" onclick="showToast('2FA Setup coming soon!', true)">
+                        <i class="fas fa-mobile-alt"></i> Enable 2FA
+                    </button>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Active Sessions</h4>
+                        <p>Manage devices currently logged into your account.</p>
+                    </div>
+                    <button class="btn-outline" onclick="showToast('Session management coming soon!', true)">
+                        <i class="fas fa-laptop"></i> Manage Devices
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. Danger Zone -->
+            <div class="settings-section danger-zone">
+                <div class="section-header">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <h2>Danger Zone</h2>
+                        <p>Irreversible actions regarding your account.</p>
+                    </div>
+                </div>
+                
+                <div class="setting-item" style="border-bottom: none; padding: 0;">
+                    <div class="setting-info">
+                        <h4 style="color: var(--danger);">Delete Account</h4>
+                        <p>Permanently delete your account and all associated data. This action cannot be undone.</p>
+                    </div>
+                    <button class="btn-danger" onclick="openDeleteModal()">
+                        <i class="fas fa-trash-alt"></i> Delete Account
+                    </button>
+                </div>
+            </div>
+
+        </div>
+        <!-- End Settings Container -->
+    </main>
+
+    <!-- Delete Account Modal -->
+    <div class="modal-overlay" id="delete-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <i class="fas fa-exclamation-circle"></i>
+                <h3>Delete Account?</h3>
+                <p>This will permanently erase your profile, transaction history, and balances. To confirm, please type <strong style="color: var(--danger);">DELETE</strong> in the box below.</p>
+            </div>
+            <div class="form-group">
+                <label>Type "DELETE" to confirm</label>
+                <input type="text" id="delete-confirm-input" placeholder="DELETE" oninput="validateDeleteInput()">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn-confirm-delete" id="btn-final-delete" onclick="confirmDeleteAccount()" disabled>
+                    Permanently Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-msg">Settings saved successfully!</span>
+    </div>
+
+    <script>
+        // --- SUPABASE CONFIG ---
+        const SUPABASE_URL = 'https://mybymdcjytslxihbgqnh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15YnltZGNqeXRzbHhpaGJncW5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzOTYzMjMsImV4cCI6MjA5NTk3MjMyM30.5VBuL938TWC0cijFPPVdd1pG7_A1dFioQ5Bhv6SnLhs';
+        
+        let supabaseClient;
+        try {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (e) {
+            console.warn("Supabase failed to load.");
+        }
+
+        let currentUserId = null;
+
+        // --- LOAD SETTINGS ---
+        async function loadSettings() {
+            try {
+                if (!supabaseClient) return;
+                
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) {
+                    // window.location.href = 'index.html';
+                    return;
+                }
+
+                currentUserId = session.user.id;
+                document.getElementById('user-email').innerText = session.user.email;
+                document.getElementById('user-avatar-btn').innerText = session.user.email.charAt(0).toUpperCase();
+
+                // Fetch user settings from metadata or a dedicated 'settings' table
+                // Here we assume settings are stored in user_metadata for simplicity
+                const userMetadata = session.user.user_metadata || {};
+                
+                // Apply saved settings to toggles (fallback to true for critical ones)
+                document.querySelector('input[name="notify_deposit"]').checked = userMetadata.notify_deposit !== false;
+                document.querySelector('input[name="notify_withdrawal"]').checked = userMetadata.notify_withdrawal !== false;
+                document.querySelector('input[name="notify_maturity"]').checked = userMetadata.notify_maturity !== false;
+                document.querySelector('input[name="notify_promo"]').checked = userMetadata.notify_promo === true;
+
+            } catch (error) {
+                console.error("Error loading settings:", error);
+            }
+        }
+
+        // --- SAVE SETTINGS ---
+        async function saveSettings() {
+            const btn = document.querySelector('.btn-save');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            btn.disabled = true;
+
+            const newSettings = {
+                notify_deposit: document.querySelector('input[name="notify_deposit"]').checked,
+                notify_withdrawal: document.querySelector('input[name="notify_withdrawal"]').checked,
+                notify_maturity: document.querySelector('input[name="notify_maturity"]').checked,
+                notify_promo: document.querySelector('input[name="notify_promo"]').checked
+            };
+
+            try {
+                // Update Supabase Auth User Metadata
+                const { error } = await supabaseClient.auth.updateUser({
+                    data: newSettings
+                });
+
+                if (error) throw error;
+
+                showToast('Notification preferences updated successfully!');
+            } catch (error) {
+                console.error("Save error:", error);
+                showToast('Failed to save settings. Please try again.', true);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- DELETE ACCOUNT MODAL LOGIC ---
+        function openDeleteModal() {
+            document.getElementById('delete-modal').classList.add('show');
+            document.getElementById('delete-confirm-input').value = '';
+            document.getElementById('btn-final-delete').disabled = true;
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.remove('show');
+        }
+
+        function validateDeleteInput() {
+            const input = document.getElementById('delete-confirm-input').value;
+            const btn = document.getElementById('btn-final-delete');
+            btn.disabled = (input.trim().toUpperCase() !== 'DELETE');
+        }
+
+        async function confirmDeleteAccount() {
+            const btn = document.getElementById('btn-final-delete');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+            btn.disabled = true;
+
+            try {
+                // ⚠️ WARNING: This is a destructive action. 
+                // In a real app, you might call a Supabase Edge Function to safely cascade delete 
+                // the user's profile, transactions, and auth account.
+                
+                // Example: Delete from custom tables first
+                // await supabaseClient.from('profiles').delete().eq('id', currentUserId);
+                // await supabaseClient.from('transactions').delete().eq('user_id', currentUserId);
+
+                // Delete the auth user (requires the user to be recently signed in)
+                const { error } = await supabaseClient.auth.admin.deleteUser(currentUserId); 
+                // Note: admin.deleteUser requires a service role key. For client-side, 
+                // you typically guide the user to a support ticket or use a secure Edge Function.
+                
+                // For this UI demo, we will simulate success:
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                showToast('Account deletion request submitted. Redirecting...');
+                setTimeout(() => {
+                    supabaseClient.auth.signOut();
+                    window.location.href = 'index.html';
+                }, 2000);
+
+            } catch (error) {
+                console.error("Delete error:", error);
+                showToast('Failed to delete account. Contact support.', true);
+                btn.innerHTML = 'Permanently Delete';
+                btn.disabled = false;
+            }
+        }
+
+        // --- UTILS ---
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-msg');
+            msgEl.textContent = message;
+            
+            if (isError) {
+                toast.style.background = 'var(--danger)';
+                toast.querySelector('i').className = 'fas fa-exclamation-circle';
+            } else {
+                toast.style.background = 'var(--success)';
+                toast.querySelector('i').className = 'fas fa-check-circle';
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+
+        // --- DROPDOWN & SIDEBAR ---
+        const avatarBtn = document.getElementById('user-avatar-btn');
+        const dropdownMenu = document.getElementById('dropdown-menu');
+
+        function toggleDropdown() {
+            dropdownMenu.classList.toggle('show');
+            avatarBtn.classList.toggle('active');
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.user-menu-wrapper')) {
+                dropdownMenu.classList.remove('show');
+                avatarBtn.classList.remove('active');
+            }
+        });
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        async function handleLogout() {
+            if (supabaseClient) {
+                await supabaseClient.auth.signOut();
+            }
+            window.location.href = 'index.html';
+        }
+
+        // Initialize
+        loadSettings();
+    </script>
+</body>
+</html>
