@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,10 +6,13 @@
 
 <title>SummitFX Investment - Login</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- FontAwesome for the eye icon (Optional but looks better) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Supabase JS Library (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-
 *{
 margin:0;
 padding:0;
@@ -97,6 +99,7 @@ transform:translateY(-50%);
 cursor:pointer;
 font-size:18px;
 user-select:none;
+color: #94a3b8;
 }
 
 button{
@@ -115,6 +118,7 @@ margin-top:5px;
 
 button:hover{
 transform:translateY(-2px);
+background: #d48b17;
 }
 
 .bottom-text{
@@ -134,6 +138,12 @@ font-weight:600;
 text-decoration:underline;
 }
 
+/* Loading state for button */
+button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
 </style>
 </head>
 
@@ -157,10 +167,10 @@ Access your investment dashboard
 
 <div class="input-group password-wrapper">
 <input type="password" id="password" placeholder="Password">
-<span class="eye" onclick="togglePassword()">👁</span>
+<span class="eye" onclick="togglePassword()"><i class="fas fa-eye"></i></span>
 </div>
 
-<button onclick="login()">
+<button id="login-btn" onclick="login()">
 Login
 </button>
 
@@ -171,55 +181,80 @@ Don't have an account?
 
 </div>
 
-<script type="module">
-import { supabase } from "./js/supabase.js";
+<!-- REGULAR SCRIPT (NOT MODULE) -->
+<script>
+    // --- SUPABASE CONFIGURATION (Matches your other pages) ---
+    const SUPABASE_URL = 'https://mybymdcjytslxihbgqnh.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15YnltZGNqeXRzbHhpaGJncW5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzOTYzMjMsImV4cCI6MjA5NTk3MjMyM30.5VBuL938TWC0cijFPPVdd1pG7_A1dFioQ5Bhv6SnLhs';
+    
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* TOGGLE PASSWORD */
-window.togglePassword = () => {
-const input = document.getElementById("password");
-const eye = document.querySelector(".eye");
+    /* TOGGLE PASSWORD */
+    function togglePassword() {
+        const input = document.getElementById("password");
+        const eyeIcon = document.querySelector(".eye i");
 
-if (input.type === "password") {
-input.type = "text";
-eye.textContent = "🙈";
-} else {
-input.type = "password";
-eye.textContent = "👁";
-}
-};
+        if (input.type === "password") {
+            input.type = "text";
+            eyeIcon.classList.remove("fa-eye");
+            eyeIcon.classList.add("fa-eye-slash");
+        } else {
+            input.type = "password";
+            eyeIcon.classList.remove("fa-eye-slash");
+            eyeIcon.classList.add("fa-eye");
+        }
+    }
 
-/* LOGIN FUNCTION */
-window.login = async () => {
+    /* LOGIN FUNCTION */
+    async function login() {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const btn = document.getElementById("login-btn");
 
-const email = document.getElementById("email").value;
-const password = document.getElementById("password").value;
+        if (!email || !password) {
+            alert("Please fill in all fields");
+            return;
+        }
 
-if (!email || !password) {
-alert("Please fill all fields");
-return;
-}
+        // Show loading state
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
 
-const { data, error } = await supabase.auth.signInWithPassword({
-email,
-password
-});
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
 
-if (error) {
-alert(error.message);
-return;
-}
+        if (error) {
+            console.error("Login Error:", error);
+            alert("Login Failed: " + error.message);
+            
+            // Reset button
+            btn.disabled = false;
+            btn.innerHTML = 'Login';
+            return;
+        }
 
-/* CONFIRM SESSION */
-const { data: sessionData } = await supabase.auth.getSession();
+        /* CONFIRM SESSION & REDIRECT */
+        const { data: sessionData } = await supabaseClient.auth.getSession();
 
-if (sessionData.session) {
-window.location.href = "dashboard.html";
-} else {
-alert("Login failed. Try again.");
-}
-};
+        if (sessionData.session) {
+            // Success! Redirect to dashboard
+            window.location.href = "dashboard.html";
+        } else {
+            alert("Login failed. Please try again.");
+            btn.disabled = false;
+            btn.innerHTML = 'Login';
+        }
+    }
+
+    // Optional: Allow pressing "Enter" key to login
+    document.getElementById("password").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            login();
+        }
+    });
 </script>
 
 </body>
 </html>
-```
