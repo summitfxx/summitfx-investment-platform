@@ -623,7 +623,7 @@
             document.getElementById(nameId).innerText = '';
         }
 
-        // --- SUBMIT KYC ---
+        // --- SUBMIT KYC (FIXED: NOW UPLOADS REAL FILES TO SUPABASE) ---
         async function submitKYC() {
             const idFront = document.getElementById('input-id-front').files[0];
             const idBack = document.getElementById('input-id-back').files[0];
@@ -640,11 +640,7 @@
             btn.disabled = true;
 
             try {
-                // 🚨 SUPABASE STORAGE UPLOAD LOGIC 🚨
-                // 1. Create a storage bucket named 'kyc-documents' in Supabase and set it to Private.
-                // 2. Uncomment and use the code below to upload files.
-                
-                /*
+                // 🚨 REAL SUPABASE STORAGE UPLOAD LOGIC 🚨
                 const fileExt = (file) => file.name.split('.').pop();
                 const uploadFile = async (file, path) => {
                     const { data, error } = await supabaseClient.storage
@@ -654,24 +650,25 @@
                     return data.path;
                 };
 
+                // 1. Upload the mandatory files into a folder named after the user's ID
                 await uploadFile(idFront, 'id_front');
                 await uploadFile(idBack, 'id_back');
                 await uploadFile(poa, 'proof_of_address');
-                if (document.getElementById('input-selfie').files[0]) {
-                    await uploadFile(document.getElementById('input-selfie').files[0], 'selfie');
+
+                // 2. Upload the optional selfie if provided
+                const selfieInput = document.getElementById('input-selfie');
+                if (selfieInput.files[0]) {
+                    await uploadFile(selfieInput.files[0], 'selfie');
                 }
-                */
 
-                // Simulate network delay for demo
-                await new Promise(resolve => setTimeout(resolve, 2500));
-
-                // Update user metadata to reflect 'under_review'
+                // 3. Update user metadata to reflect 'under_review'
                 const { error: updateError } = await supabaseClient.auth.updateUser({
                     data: { kyc_status: 'under_review' }
                 });
 
                 if (updateError) throw updateError;
 
+                // 4. Update the UI to show success
                 kycStatus = 'under_review';
                 updateStatusUI(kycStatus);
                 disableUploads();
@@ -680,7 +677,7 @@
 
             } catch (error) {
                 console.error("KYC Submission Error:", error);
-                showToast('Failed to submit KYC. Please try again.', true);
+                showToast('Failed to upload: ' + error.message, true);
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
