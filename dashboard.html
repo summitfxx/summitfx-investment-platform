@@ -874,12 +874,12 @@
         // --- FETCH REAL DATA FOR STATS & TABLES ---
         async function fetchUserData(userId) {
             try {
-                // 1. Fetch Profile Stats
+                // 1. Fetch Profile Stats (Using maybeSingle to prevent crashes if row is missing)
                 const { data: profile } = await supabaseClient
                     .from('profiles')
                     .select('balance, total_deposits, total_profit')
                     .eq('id', userId)
-                    .single();
+                    .maybeSingle();
                 
                 if (profile) {
                     document.getElementById('stat-balance').innerText = '$' + parseFloat(profile.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
@@ -974,7 +974,7 @@
             }, 4000);
         }
 
-        // --- INSTANT INVESTMENT LOGIC (BULLETPROOF) ---
+        // --- INSTANT INVESTMENT LOGIC (100% BULLETPROOF) ---
         let selectedPlan = {};
 
         function openInvestModal(plan, invest, returns) {
@@ -1001,22 +1001,40 @@
                 if (!session) { window.location.href = 'index.html'; return; }
                 const userId = session.user.id;
 
-                // 1. Fetch Balance (with auto-create fallback for missing profiles)
-                let { data: profile, error: fetchError } = await supabaseClient
-                    .from('profiles').select('balance').eq('id', userId).single();
+                // 1. Fetch Balance safely using maybeSingle()
+                let { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('balance')
+                    .eq('id', userId)
+                    .maybeSingle();
 
-                // If profile row doesn't exist, create it automatically so the app doesn't break
-                if (fetchError && fetchError.code === 'PGRST116') { 
-                    await supabaseClient.from('profiles').insert({ id: userId, balance: 0, total_deposits: 0, total_profit: 0 });
-                    const { data: newProfile } = await supabaseClient.from('profiles').select('balance').eq('id', userId).single();
+                // If profile doesn't exist, try to create it automatically
+                if (!profile) {
+                    await supabaseClient.from('profiles').insert({ 
+                        id: userId, 
+                        balance: 0, 
+                        total_deposits: 0, 
+                        total_profit: 0 
+                    });
+                    
+                    // Fetch again
+                    const { data: newProfile } = await supabaseClient
+                        .from('profiles')
+                        .select('balance')
+                        .eq('id', userId)
+                        .maybeSingle();
+                        
                     profile = newProfile;
-                } else if (fetchError) {
-                    throw new Error('Unable to connect to account database.');
+                }
+
+                // 2. BULLETPROOF SAFETY CHECK: Prevents the "Cannot read properties of null" crash
+                if (!profile || profile.balance === null || profile.balance === undefined) {
+                    throw new Error('Unable to verify your account balance. Please refresh the page or contact support.');
                 }
 
                 const currentBalance = parseFloat(profile.balance) || 0;
 
-                // 2. Check Funds
+                // 3. Check Funds
                 if (currentBalance < selectedPlan.invest) {
                     showToast(`Insufficient funds. You need $${selectedPlan.invest.toLocaleString()}, but your balance is $${currentBalance.toLocaleString()}. Redirecting to deposit...`, true);
                     setTimeout(() => { 
@@ -1026,14 +1044,14 @@
                     return; 
                 }
 
-                // 3. Deduct Balance
+                // 4. Deduct Balance
                 const newBalance = currentBalance - selectedPlan.invest;
                 const { error: updateError } = await supabaseClient
                     .from('profiles').update({ balance: newBalance }).eq('id', userId);
                 
                 if (updateError) throw new Error('Failed to secure funds.');
 
-                // 4. Create Investment
+                // 5. Create Investment
                 const maturityDate = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
                 const planName = selectedPlan.plan.charAt(0).toUpperCase() + selectedPlan.plan.slice(1);
 
@@ -1043,13 +1061,13 @@
                 });
                 if (investError) throw new Error('Failed to activate investment plan.');
 
-                // 5. Log Transaction
+                // 6. Log Transaction
                 await supabaseClient.from('transactions').insert({
                     user_id: userId, type: 'investment', amount: selectedPlan.invest,
                     description: `${planName} Plan Investment`, status: 'completed'
                 });
 
-                // 6. Success & Redirect
+                // 7. Success & Redirect
                 showToast('Investment activated successfully! Redirecting...', false);
                 setTimeout(() => {
                     window.location.href = `active-investment.html?plan=${encodeURIComponent(selectedPlan.plan)}&invest=${selectedPlan.invest}&returns=${selectedPlan.returns}`;
