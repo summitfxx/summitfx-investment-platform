@@ -87,7 +87,9 @@
             color: var(--bg-primary); font-weight: 700; font-size: 18px;
             cursor: pointer; border: 2px solid transparent;
             transition: all 0.25s ease; box-shadow: 0 4px 12px rgba(245, 166, 35, 0.25);
+            overflow: hidden;
         }
+        .user-avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
         .user-avatar-btn:hover, .user-avatar-btn.active {
             transform: scale(1.05); border-color: var(--accent-gold);
             box-shadow: 0 6px 18px rgba(245, 166, 35, 0.4);
@@ -427,13 +429,6 @@
                                 <label>Country</label>
                                 <select id="country">
                                     <option value="">Select Country</option>
-                                    <option value="US">United States</option>
-                                    <option value="UK">United Kingdom</option>
-                                    <option value="CA">Canada</option>
-                                    <option value="AU">Australia</option>
-                                    <option value="NG">Nigeria</option>
-                                    <option value="ZA">South Africa</option>
-                                    <option value="Other">Other</option>
                                 </select>
                             </div>
                         </div>
@@ -518,52 +513,84 @@
 
         let currentUserId = null;
 
-        // --- AVATAR PREVIEW LOGIC ---
+        // --- 1. POPULATE COUNTRIES DROPDOWN ---
+        const countries = ["Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo (Congo-Brazzaville)", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia (Czech Republic)", "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar (Burma)", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine State", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"];
+
+        function populateCountries() {
+            const select = document.getElementById('country');
+            const defaultOption = select.options[0];
+            select.innerHTML = '';
+            select.appendChild(defaultOption);
+            
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                option.textContent = country;
+                select.appendChild(option);
+            });
+        }
+
+        // --- 2. AVATAR UPLOAD LOGIC (PERSISTENT) ---
         function previewAvatar(event) {
             const file = event.target.files[0];
             if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    showToast('Image size must be less than 5MB', true);
+                    event.target.value = '';
+                    return;
+                }
+                
+                // Show local preview immediately for snappy UX
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('profile-avatar-img').src = e.target.result;
-                    // TODO: Upload to Supabase Storage here
-                    // uploadAvatarToSupabase(file);
                 };
                 reader.readAsDataURL(file);
-                showToast('Photo updated locally. Ready to save!');
+                
+                // Upload to Supabase in the background
+                uploadAvatarToSupabase(file);
             }
         }
 
-        /* 
-        // UNCOMMENT AND CONFIGURE FOR REAL SUPABASE STORAGE UPLOAD:
         async function uploadAvatarToSupabase(file) {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${currentUserId}-${Math.random()}.${fileExt}`;
-            const filePath = `avatars/${fileName}`;
-
-            const { data, error } = await supabaseClient.storage
-                .from('profile-pictures') // Make sure this bucket exists in Supabase
-                .upload(filePath, file, { upsert: true });
-
-            if (error) {
-                console.error('Upload error:', error);
-                showToast('Failed to upload image', true);
-                return;
-            }
-
-            // Get public URL and update user metadata
-            const { data: { publicUrl } } = supabaseClient.storage
-                .from('profile-pictures')
-                .getPublicUrl(filePath).data;
-
-            await supabaseClient.auth.updateUser({
-                data: { avatar_url: publicUrl }
-            });
+            const overlay = document.querySelector('.avatar-upload-overlay');
+            const originalIcon = overlay.innerHTML;
+            overlay.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             
-            document.getElementById('profile-avatar-img').src = publicUrl;
-        }
-        */
+            try {
+                const fileExt = file.name.split('.').pop();
+                // Use a predictable path so it overwrites any previous avatar
+                const fileName = `${currentUserId}/avatar.${fileExt}`; 
 
-        // --- FETCH PROFILE DATA ---
+                const { data, error } = await supabaseClient.storage
+                    .from('profile-pictures') // Ensure this bucket exists and is Public in Supabase
+                    .upload(fileName, file, { upsert: true, cacheControl: '3600' });
+
+                if (error) throw error;
+
+                const { data: { publicUrl } } = supabaseClient.storage
+                    .from('profile-pictures')
+                    .getPublicUrl(fileName);
+
+                const { error: updateError } = await supabaseClient.auth.updateUser({
+                    data: { avatar_url: publicUrl }
+                });
+
+                if (updateError) throw updateError;
+
+                // Update UI
+                document.getElementById('profile-avatar-img').src = publicUrl;
+                showToast('Profile photo saved successfully!');
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                showToast('Failed to upload photo: ' + error.message, true);
+            } finally {
+                overlay.innerHTML = originalIcon;
+            }
+        }
+
+        // --- 3. FETCH PROFILE DATA ---
         async function loadProfile() {
             try {
                 if (!supabaseClient) return;
@@ -597,7 +624,10 @@
                 // Avatar: Use custom avatar URL if exists, else fallback to UI Avatars
                 const avatarUrl = userMetadata.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=f5a623&color=0b1220&size=256`;
                 document.getElementById('profile-avatar-img').src = avatarUrl;
-                document.getElementById('user-avatar-btn').innerText = fullName.charAt(0).toUpperCase();
+                
+                // Update top right dropdown avatar
+                const topAvatarBtn = document.getElementById('user-avatar-btn');
+                topAvatarBtn.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
 
                 // Account Details
                 document.getElementById('member-id').innerText = `#SFX-${currentUserId.substring(0, 6).toUpperCase()}`;
@@ -610,7 +640,7 @@
             }
         }
 
-        // --- SAVE PROFILE ---
+        // --- 4. SAVE PROFILE ---
         async function saveProfile(event) {
             event.preventDefault();
             const btn = document.getElementById('save-btn');
@@ -628,23 +658,16 @@
             };
 
             try {
-                // Update Supabase Auth User Metadata
                 const { error } = await supabaseClient.auth.updateUser({
                     data: updateData
                 });
 
                 if (error) throw error;
 
-                // Optional: Also update a custom 'profiles' table if you have one
-                // const { error: dbError } = await supabaseClient.from('profiles').update(updateData).eq('id', currentUserId);
-                // if (dbError) throw dbError;
-
                 showToast('Profile updated successfully!');
                 
-                // Update display name immediately
                 const fullName = `${updateData.first_name} ${updateData.last_name}`.trim();
                 document.getElementById('display-name').innerText = fullName || 'SummitFX User';
-                document.getElementById('user-avatar-btn').innerText = (fullName || 'U').charAt(0).toUpperCase();
 
             } catch (error) {
                 console.error("Save error:", error);
@@ -655,7 +678,7 @@
             }
         }
 
-        // --- CHANGE PASSWORD ---
+        // --- 5. CHANGE PASSWORD ---
         async function changePassword(event) {
             event.preventDefault();
             const newPass = document.getElementById('new-password').value;
@@ -726,7 +749,8 @@
             window.location.href = 'index.html';
         }
 
-        // Initialize
+        // --- INITIALIZE ---
+        populateCountries();
         loadProfile();
     </script>
 </body>
