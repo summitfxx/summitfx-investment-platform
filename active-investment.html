@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Active - SummitFX</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --bg-primary: #0b1220; --bg-secondary: #111827; --bg-card: #1e293b; --border-color: #334155; --text-primary: #f8fafc; --text-secondary: #94a3b8; --accent-gold: #f5a623; --accent-gold-hover: #d48b17; --success: #10b981; --sidebar-width: 260px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { background-color: var(--bg-primary); color: var(--text-primary); display: flex; min-height: 100vh; }
+        
+        /* Sidebar (Simplified for this page) */
+        .sidebar { width: var(--sidebar-width); background-color: var(--bg-secondary); border-right: 1px solid var(--border-color); position: fixed; height: 100vh; display: flex; flex-direction: column; padding: 24px 0; z-index: 100; }
+        .logo { padding: 0 24px 32px; font-size: 24px; font-weight: 800; border-bottom: 1px solid var(--border-color); margin-bottom: 24px; } .logo span { color: var(--accent-gold); }
+        .nav-menu { flex: 1; padding: 0 16px; }
+        .nav-item { display: flex; align-items: center; gap: 16px; padding: 14px 16px; color: var(--text-secondary); text-decoration: none; border-radius: 8px; margin-bottom: 8px; transition: all 0.2s; font-weight: 500; }
+        .nav-item:hover, .nav-item.active { background-color: rgba(245, 166, 35, 0.1); color: var(--accent-gold); } .nav-item.active { border-left: 3px solid var(--accent-gold); } .nav-item i { width: 20px; text-align: center; font-size: 18px; }
+        .logout-btn { margin: 0 16px; padding: 14px; background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; }
+        .logout-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+        .main-content { margin-left: var(--sidebar-width); flex: 1; padding: 32px; display: flex; align-items: center; justify-content: center; }
+        
+        .success-container { max-width: 600px; width: 100%; text-align: center; animation: fadeIn 0.6s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .success-icon { width: 100px; height: 100px; background: rgba(16, 185, 129, 0.1); color: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 48px; margin: 0 auto 24px; border: 2px solid rgba(16, 185, 129, 0.3); }
+        
+        .success-title { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+        .success-subtitle { color: var(--text-secondary); font-size: 16px; margin-bottom: 32px; }
+
+        .investment-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px; text-align: left; margin-bottom: 32px; position: relative; overflow: hidden; }
+        .investment-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--accent-gold), transparent); }
+        
+        .card-row { display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border-color); }
+        .card-row:last-child { border-bottom: none; }
+        .card-row .label { color: var(--text-secondary); font-size: 14px; font-weight: 500; }
+        .card-row .value { font-size: 16px; font-weight: 700; color: var(--text-primary); text-align: right; }
+        .card-row .value.highlight { color: var(--accent-gold); font-size: 18px; }
+        .card-row .value.profit { color: var(--success); font-size: 18px; }
+
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(16, 185, 129, 0.1); color: var(--success); border-radius: 50px; font-size: 13px; font-weight: 600; }
+        .status-badge::before { content: ''; width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+
+        .action-buttons { display: flex; gap: 16px; justify-content: center; }
+        .btn { padding: 14px 28px; border-radius: 10px; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--accent-gold); color: var(--bg-primary); border: none; }
+        .btn-primary:hover { background: var(--accent-gold-hover); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245, 166, 35, 0.3); }
+        .btn-secondary { background: transparent; color: var(--text-primary); border: 1px solid var(--border-color); }
+        .btn-secondary:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; padding: 20px; }
+            .action-buttons { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="logo">Summit<span>FX</span></div>
+        <nav class="nav-menu">
+            <a href="dashboard.html" class="nav-item"><i class="fas fa-chart-line"></i> Dashboard</a>
+            <a href="plans.html" class="nav-item"><i class="fas fa-layer-group"></i> Investment Plans</a>
+            <a href="deposit.html" class="nav-item"><i class="fas fa-arrow-down"></i> Deposit</a>
+            <a href="withdraw.html" class="nav-item"><i class="fas fa-arrow-up"></i> Withdraw</a>
+            <a href="transactions.html" class="nav-item"><i class="fas fa-history"></i> Transactions</a>
+        </nav>
+        <button class="logout-btn" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <div class="success-container">
+            <div class="success-icon"><i class="fas fa-check"></i></div>
+            <h1 class="success-title">Investment Successful!</h1>
+            <p class="success-subtitle">Your funds have been allocated and your investment is now actively generating returns.</p>
+
+            <div class="investment-card">
+                <div class="card-row">
+                    <span class="label">Investment Plan</span>
+                    <span class="value highlight" id="display-plan">Loading...</span>
+                </div>
+                <div class="card-row">
+                    <span class="label">Amount Invested</span>
+                    <span class="value" id="display-invest">Loading...</span>
+                </div>
+                <div class="card-row">
+                    <span class="label">Expected Return</span>
+                    <span class="value profit" id="display-returns">Loading...</span>
+                </div>
+                <div class="card-row">
+                    <span class="label">Maturity Date</span>
+                    <span class="value" id="display-maturity">Loading...</span>
+                </div>
+                <div class="card-row">
+                    <span class="label">Current Status</span>
+                    <span class="status-badge">Actively Trading</span>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <a href="dashboard.html" class="btn btn-primary"><i class="fas fa-home"></i> Back to Dashboard</a>
+                <a href="transactions.html" class="btn btn-secondary"><i class="fas fa-receipt"></i> View Transaction</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const SUPABASE_URL = 'https://mybymdcjytslxihbgqnh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15YnltZGNqeXRzbHhpaGJncW5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzOTYzMjMsImV4cCI6MjA5NTk3MjMyM30.5VBuL938TWC0cijFPPVdd1pG7_A1dFioQ5Bhv6SnLhs';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Parse URL Parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const plan = urlParams.get('plan') || 'Gold';
+        const invest = parseFloat(urlParams.get('invest')) || 5000;
+        const returns = parseFloat(urlParams.get('returns')) || 100000;
+
+        // Calculate Maturity Date (48 hours from now)
+        const maturityDate = new Date(Date.now() + 48 * 60 * 60 * 1000);
+        const formattedMaturity = maturityDate.toLocaleString('en-US', { 
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+        });
+
+        // Update UI
+        document.getElementById('display-plan').textContent = plan.charAt(0).toUpperCase() + plan.slice(1) + ' Plan';
+        document.getElementById('display-invest').textContent = '$' + invest.toLocaleString();
+        document.getElementById('display-returns').textContent = '$' + returns.toLocaleString();
+        document.getElementById('display-maturity').textContent = formattedMaturity;
+
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
