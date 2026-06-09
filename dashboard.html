@@ -494,6 +494,23 @@
         .modal-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(245, 166, 35, 0.4); }
         .modal-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 
+        /* --- Premium Toast Notification --- */
+        .toast {
+            position: fixed; bottom: 32px; right: 32px;
+            background: var(--bg-card); color: var(--text-primary);
+            padding: 16px 24px; border-radius: 12px; font-weight: 600; font-size: 14px;
+            display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color);
+            transform: translateY(100px); opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2000;
+            max-width: 400px;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.error { border-left: 4px solid var(--danger); }
+        .toast.error i { color: var(--danger); }
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.success i { color: var(--success); }
+
         .mobile-menu-toggle {
             display: none;
             background: var(--bg-card);
@@ -513,6 +530,7 @@
             .mobile-menu-toggle { display: flex; align-items: center; justify-content: center; }
             .welcome h1 { font-size: 22px; }
             .stat-card .value { font-size: 22px; }
+            .toast { left: 20px; right: 20px; bottom: 20px; max-width: 100%; }
         }
     </style>
 </head>
@@ -804,6 +822,12 @@
         </div>
     </div>
 
+    <!-- Premium Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fas fa-info-circle"></i>
+        <span id="toast-msg">Notification</span>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://mybymdcjytslxihbgqnh.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15YnltZGNqeXRzbHhpaGJncW5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzOTYzMjMsImV4cCI6MjA5NTk3MjMyM30.5VBuL938TWC0cijFPPVdd1pG7_A1dFioQ5Bhv6SnLhs';
@@ -927,7 +951,30 @@
             }
         }
 
-        // --- INSTANT INVESTMENT LOGIC ---
+        // --- PREMIUM TOAST NOTIFICATION ---
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-msg');
+            const icon = toast.querySelector('i');
+            
+            msgEl.textContent = message;
+            toast.className = 'toast'; // Reset classes
+            
+            if (isError) {
+                toast.classList.add('error');
+                icon.className = 'fas fa-exclamation-circle';
+            } else {
+                toast.classList.add('success');
+                icon.className = 'fas fa-check-circle';
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        // --- INSTANT INVESTMENT LOGIC (BULLETPROOF) ---
         let selectedPlan = {};
 
         function openInvestModal(plan, invest, returns) {
@@ -954,54 +1001,63 @@
                 if (!session) { window.location.href = 'index.html'; return; }
                 const userId = session.user.id;
 
-                // Check Balance
-                const { data: profile, error: fetchError } = await supabaseClient
+                // 1. Fetch Balance (with auto-create fallback for missing profiles)
+                let { data: profile, error: fetchError } = await supabaseClient
                     .from('profiles').select('balance').eq('id', userId).single();
 
-                if (fetchError || !profile) throw new Error('Could not fetch account balance.');
-                const currentBalance = parseFloat(profile.balance) || 0;
-
-                if (currentBalance < selectedPlan.invest) {
-                    alert(`Insufficient Balance!\n\nRequired: $${selectedPlan.invest.toLocaleString()}\nYour Balance: $${currentBalance.toLocaleString()}\n\nPlease deposit funds first.`);
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    closeInvestModal();
-                    setTimeout(() => { window.location.href = 'deposit.html'; }, 2000);
-                    return;
+                // If profile row doesn't exist, create it automatically so the app doesn't break
+                if (fetchError && fetchError.code === 'PGRST116') { 
+                    await supabaseClient.from('profiles').insert({ id: userId, balance: 0, total_deposits: 0, total_profit: 0 });
+                    const { data: newProfile } = await supabaseClient.from('profiles').select('balance').eq('id', userId).single();
+                    profile = newProfile;
+                } else if (fetchError) {
+                    throw new Error('Unable to connect to account database.');
                 }
 
-                // Deduct Balance
-                const newBalance = currentBalance - selectedPlan.invest;
-                await supabaseClient.from('profiles').update({ balance: newBalance }).eq('id', userId);
+                const currentBalance = parseFloat(profile.balance) || 0;
 
-                // Create Investment Record
+                // 2. Check Funds
+                if (currentBalance < selectedPlan.invest) {
+                    showToast(`Insufficient funds. You need $${selectedPlan.invest.toLocaleString()}, but your balance is $${currentBalance.toLocaleString()}. Redirecting to deposit...`, true);
+                    setTimeout(() => { 
+                        closeInvestModal(); 
+                        window.location.href = 'deposit.html'; 
+                    }, 2500);
+                    return; 
+                }
+
+                // 3. Deduct Balance
+                const newBalance = currentBalance - selectedPlan.invest;
+                const { error: updateError } = await supabaseClient
+                    .from('profiles').update({ balance: newBalance }).eq('id', userId);
+                
+                if (updateError) throw new Error('Failed to secure funds.');
+
+                // 4. Create Investment
                 const maturityDate = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
                 const planName = selectedPlan.plan.charAt(0).toUpperCase() + selectedPlan.plan.slice(1);
 
-                await supabaseClient.from('investments').insert({
-                    user_id: userId,
-                    plan_name: planName,
-                    invested_amount: selectedPlan.invest,
-                    expected_return: selectedPlan.returns,
-                    maturity_date: maturityDate,
-                    status: 'active'
+                const { error: investError } = await supabaseClient.from('investments').insert({
+                    user_id: userId, plan_name: planName, invested_amount: selectedPlan.invest,
+                    expected_return: selectedPlan.returns, maturity_date: maturityDate, status: 'active'
                 });
+                if (investError) throw new Error('Failed to activate investment plan.');
 
-                // Log Transaction
+                // 5. Log Transaction
                 await supabaseClient.from('transactions').insert({
-                    user_id: userId,
-                    type: 'investment',
-                    amount: selectedPlan.invest,
-                    description: `${planName} Plan Investment`,
-                    status: 'completed'
+                    user_id: userId, type: 'investment', amount: selectedPlan.invest,
+                    description: `${planName} Plan Investment`, status: 'completed'
                 });
 
-                // Redirect to Success Page
-                window.location.href = `active-investment.html?plan=${encodeURIComponent(selectedPlan.plan)}&invest=${selectedPlan.invest}&returns=${selectedPlan.returns}`;
+                // 6. Success & Redirect
+                showToast('Investment activated successfully! Redirecting...', false);
+                setTimeout(() => {
+                    window.location.href = `active-investment.html?plan=${encodeURIComponent(selectedPlan.plan)}&invest=${selectedPlan.invest}&returns=${selectedPlan.returns}`;
+                }, 1500);
 
             } catch (error) {
                 console.error("Investment Error:", error);
-                alert('An error occurred: ' + error.message);
+                showToast(error.message || 'An unexpected error occurred.', true);
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
