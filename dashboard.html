@@ -278,9 +278,7 @@
         .stat-card .value { font-size: 28px; font-weight: 700; }
 
         /* --- Investment Plans Section --- */
-        .plans-section {
-            margin-bottom: 32px;
-        }
+        .plans-section { margin-bottom: 32px; }
 
         .plans-header {
             display: flex;
@@ -291,21 +289,9 @@
             gap: 12px;
         }
 
-        .plans-header-left h2 {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .plans-header-left p {
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-
-        .plans-header-left .highlight {
-            color: var(--accent-gold);
-            font-weight: 600;
-        }
+        .plans-header-left h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+        .plans-header-left p { color: var(--text-secondary); font-size: 14px; }
+        .plans-header-left .highlight { color: var(--accent-gold); font-weight: 600; }
 
         .plans-grid {
             display: grid;
@@ -357,13 +343,7 @@
             letter-spacing: 0.5px;
         }
 
-        .plan-top {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 18px;
-        }
-
+        .plan-top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
         .plan-icon {
             width: 44px; height: 44px;
             background: rgba(245, 166, 35, 0.1);
@@ -372,19 +352,8 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 18px;
         }
-
-        .plan-name {
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .plan-duration {
-            font-size: 12px;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
+        .plan-name { font-size: 18px; font-weight: 700; }
+        .plan-duration { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; }
 
         .plan-amounts {
             display: flex;
@@ -395,26 +364,9 @@
             border-radius: 10px;
             margin-bottom: 16px;
         }
-
-        .plan-invest-label {
-            font-size: 11px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 2px;
-        }
-
-        .plan-invest-value {
-            font-size: 22px;
-            font-weight: 800;
-        }
-
-        .plan-return-value {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--success);
-            text-align: right;
-        }
+        .plan-invest-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .plan-invest-value { font-size: 22px; font-weight: 800; }
+        .plan-return-value { font-size: 22px; font-weight: 800; color: var(--success); text-align: right; }
 
         .plan-roi {
             display: flex;
@@ -425,11 +377,7 @@
             border-top: 1px dashed var(--border-color);
             margin-bottom: 16px;
         }
-
-        .plan-roi .roi-value {
-            color: var(--accent-gold);
-            font-weight: 700;
-        }
+        .plan-roi .roi-value { color: var(--accent-gold); font-weight: 700; }
 
         .plan-btn {
             display: flex;
@@ -520,6 +468,32 @@
         .status-pending { background: rgba(245, 166, 35, 0.1); color: var(--accent-gold); }
         .status-completed { background: rgba(100, 116, 139, 0.2); color: var(--text-secondary); }
 
+        /* --- Investment Modal --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(6px);
+            display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 20px; padding: 36px; max-width: 480px; width: 100%;
+            position: relative; animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-close { position: absolute; top: 16px; right: 16px; background: var(--bg-secondary); border: none; color: var(--text-secondary); font-size: 16px; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: var(--danger); color: white; }
+        .modal h3 { font-size: 24px; margin-bottom: 8px; text-align: center; }
+        .modal-subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; text-align: center; }
+        .modal-summary { background: var(--bg-secondary); border-radius: 14px; padding: 20px; margin-bottom: 28px; border: 1px solid var(--border-color); }
+        .modal-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; }
+        .modal-row .label { color: var(--text-secondary); }
+        .modal-row.total { border-top: 1px dashed var(--border-color); margin-top: 12px; padding-top: 16px; font-weight: 800; font-size: 18px; }
+        .modal-row.total .value { color: var(--success); }
+        .modal-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-hover)); color: var(--bg-primary); border: none; border-radius: 12px; font-weight: 800; font-size: 16px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .modal-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(245, 166, 35, 0.4); }
+        .modal-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
         .mobile-menu-toggle {
             display: none;
             background: var(--bg-card);
@@ -549,7 +523,6 @@
         <div class="logo">Summit<span>FX</span></div>
         <nav class="nav-menu">
             <a href="dashboard.html" class="nav-item active"><i class="fas fa-chart-line"></i> Dashboard</a>
-            <!-- ✨ NEW: Investment Plans Link Added Here -->
             <a href="plans.html" class="nav-item"><i class="fas fa-layer-group"></i> Investment Plans</a>
             <a href="deposit.html" class="nav-item"><i class="fas fa-arrow-down"></i> Deposit</a>
             <a href="withdraw.html" class="nav-item"><i class="fas fa-arrow-up"></i> Withdraw</a>
@@ -655,9 +628,9 @@
                         <span>Net Profit</span>
                         <span class="roi-value">+$9,500</span>
                     </div>
-                    <a href="deposit.html?plan=starter" class="plan-btn">
+                    <button class="plan-btn" onclick="openInvestModal('Starter', 500, 10000)">
                         Invest Now <i class="fas fa-arrow-right"></i>
-                    </a>
+                    </button>
                 </div>
 
                 <!-- Silver -->
@@ -683,9 +656,9 @@
                         <span>Net Profit</span>
                         <span class="roi-value">+$19,000</span>
                     </div>
-                    <a href="deposit.html?plan=silver" class="plan-btn">
+                    <button class="plan-btn" onclick="openInvestModal('Silver', 1000, 20000)">
                         Invest Now <i class="fas fa-arrow-right"></i>
-                    </a>
+                    </button>
                 </div>
 
                 <!-- Gold (Popular) -->
@@ -712,9 +685,9 @@
                         <span>Net Profit</span>
                         <span class="roi-value">+$95,000</span>
                     </div>
-                    <a href="deposit.html?plan=gold" class="plan-btn">
+                    <button class="plan-btn" onclick="openInvestModal('Gold', 5000, 100000)">
                         Invest Now <i class="fas fa-arrow-right"></i>
-                    </a>
+                    </button>
                 </div>
 
                 <!-- VIP -->
@@ -740,9 +713,9 @@
                         <span>Net Profit</span>
                         <span class="roi-value">+$380,000</span>
                     </div>
-                    <a href="deposit.html?plan=vip" class="plan-btn">
+                    <button class="plan-btn" onclick="openInvestModal('VIP', 20000, 400000)">
                         Invest Now <i class="fas fa-arrow-right"></i>
-                    </a>
+                    </button>
                 </div>
             </div>
         </section>
@@ -751,7 +724,7 @@
         <div class="content-section">
             <div class="section-header">
                 <h2>Active Investments</h2>
-                <a href="deposit.html" class="btn-gold"><i class="fas fa-plus"></i> New Investment</a>
+                <a href="plans.html" class="btn-gold"><i class="fas fa-plus"></i> New Investment</a>
             </div>
             <div class="table-wrapper">
                 <table>
@@ -799,6 +772,38 @@
         </div>
     </main>
 
+    <!-- Investment Confirmation Modal -->
+    <div class="modal-overlay" id="invest-modal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeInvestModal()"><i class="fas fa-times"></i></button>
+            <h3>Confirm Your Investment</h3>
+            <p class="modal-subtitle">You are about to proceed with the <strong id="modal-plan-name">Gold</strong> plan.</p>
+            
+            <div class="modal-summary">
+                <div class="modal-row">
+                    <span class="label">Investment Amount</span>
+                    <span class="value" id="modal-invest">$5,000</span>
+                </div>
+                <div class="modal-row">
+                    <span class="label">Duration</span>
+                    <span class="value">48 Hours</span>
+                </div>
+                <div class="modal-row">
+                    <span class="label">Expected Return</span>
+                    <span class="value" id="modal-return">$100,000</span>
+                </div>
+                <div class="modal-row total">
+                    <span class="label">Net Profit</span>
+                    <span class="value" id="modal-profit">+$95,000</span>
+                </div>
+            </div>
+
+            <button class="modal-btn" onclick="confirmInvestment()">
+                <i class="fas fa-lock"></i> Confirm & Invest
+            </button>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://mybymdcjytslxihbgqnh.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15YnltZGNqeXRzbHhpaGJncW5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzOTYzMjMsImV4cCI6MjA5NTk3MjMyM30.5VBuL938TWC0cijFPPVdd1pG7_A1dFioQ5Bhv6SnLhs';
@@ -842,11 +847,163 @@
             }
         }
 
+        // --- FETCH REAL DATA FOR STATS & TABLES ---
         async function fetchUserData(userId) {
             try {
-                console.log("User authenticated. Ready to fetch data for ID:", userId);
+                // 1. Fetch Profile Stats
+                const { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('balance, total_deposits, total_profit')
+                    .eq('id', userId)
+                    .single();
+                
+                if (profile) {
+                    document.getElementById('stat-balance').innerText = '$' + parseFloat(profile.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+                    document.getElementById('stat-deposits').innerText = '$' + parseFloat(profile.total_deposits || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+                    document.getElementById('stat-profit').innerText = '$' + parseFloat(profile.total_profit || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+                }
+
+                // 2. Fetch Active Investments Count
+                const { count: activeCount } = await supabaseClient
+                    .from('investments')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', userId)
+                    .eq('status', 'active');
+                
+                document.getElementById('stat-investments').innerText = activeCount || 0;
+
+                // 3. Fetch Active Investments Table
+                const { data: investments } = await supabaseClient
+                    .from('investments')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+                    
+                const invBody = document.getElementById('investments-body');
+                if (investments && investments.length > 0) {
+                    invBody.innerHTML = investments.map(inv => `
+                        <tr>
+                            <td><strong>${inv.plan_name}</strong></td>
+                            <td>$${parseFloat(inv.invested_amount).toLocaleString()}</td>
+                            <td style="color: var(--success); font-weight: 600;">$${parseFloat(inv.expected_return).toLocaleString()}</td>
+                            <td>${new Date(inv.maturity_date).toLocaleDateString()}</td>
+                            <td><span class="status-badge status-active">Active</span></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    invBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 32px;">No active investments yet. Start one below!</td></tr>';
+                }
+
+                // 4. Fetch Recent Transactions Table
+                const { data: txs } = await supabaseClient
+                    .from('transactions')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+                    
+                const txBody = document.getElementById('transactions-body');
+                if (txs && txs.length > 0) {
+                    txBody.innerHTML = txs.map(tx => {
+                        const date = new Date(tx.created_at).toLocaleDateString();
+                        const typeColor = tx.type === 'deposit' || tx.type === 'profit' ? 'var(--success)' : 'var(--danger)';
+                        const sign = tx.type === 'deposit' || tx.type === 'profit' ? '+' : '-';
+                        return `
+                            <tr>
+                                <td>${date}</td>
+                                <td style="text-transform: capitalize;">${tx.type}</td>
+                                <td style="color: ${typeColor}; font-weight: 600;">${sign}$${parseFloat(tx.amount).toLocaleString()}</td>
+                                <td><span class="status-badge status-${tx.status}">${tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}</span></td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    txBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 32px;">No recent transactions.</td></tr>';
+                }
+
             } catch (error) {
                 console.error("Error fetching user data:", error);
+            }
+        }
+
+        // --- INSTANT INVESTMENT LOGIC ---
+        let selectedPlan = {};
+
+        function openInvestModal(plan, invest, returns) {
+            selectedPlan = { plan: plan.toLowerCase(), invest, returns };
+            document.getElementById('modal-plan-name').textContent = plan;
+            document.getElementById('modal-invest').textContent = '$' + invest.toLocaleString();
+            document.getElementById('modal-return').textContent = '$' + returns.toLocaleString();
+            document.getElementById('modal-profit').textContent = '+$' + (returns - invest).toLocaleString();
+            document.getElementById('invest-modal').classList.add('show');
+        }
+
+        function closeInvestModal() {
+            document.getElementById('invest-modal').classList.remove('show');
+        }
+
+        async function confirmInvestment() {
+            const btn = document.querySelector('.modal-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btn.disabled = true;
+
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) { window.location.href = 'index.html'; return; }
+                const userId = session.user.id;
+
+                // Check Balance
+                const { data: profile, error: fetchError } = await supabaseClient
+                    .from('profiles').select('balance').eq('id', userId).single();
+
+                if (fetchError || !profile) throw new Error('Could not fetch account balance.');
+                const currentBalance = parseFloat(profile.balance) || 0;
+
+                if (currentBalance < selectedPlan.invest) {
+                    alert(`Insufficient Balance!\n\nRequired: $${selectedPlan.invest.toLocaleString()}\nYour Balance: $${currentBalance.toLocaleString()}\n\nPlease deposit funds first.`);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    closeInvestModal();
+                    setTimeout(() => { window.location.href = 'deposit.html'; }, 2000);
+                    return;
+                }
+
+                // Deduct Balance
+                const newBalance = currentBalance - selectedPlan.invest;
+                await supabaseClient.from('profiles').update({ balance: newBalance }).eq('id', userId);
+
+                // Create Investment Record
+                const maturityDate = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+                const planName = selectedPlan.plan.charAt(0).toUpperCase() + selectedPlan.plan.slice(1);
+
+                await supabaseClient.from('investments').insert({
+                    user_id: userId,
+                    plan_name: planName,
+                    invested_amount: selectedPlan.invest,
+                    expected_return: selectedPlan.returns,
+                    maturity_date: maturityDate,
+                    status: 'active'
+                });
+
+                // Log Transaction
+                await supabaseClient.from('transactions').insert({
+                    user_id: userId,
+                    type: 'investment',
+                    amount: selectedPlan.invest,
+                    description: `${planName} Plan Investment`,
+                    status: 'completed'
+                });
+
+                // Redirect to Success Page
+                window.location.href = `active-investment.html?plan=${encodeURIComponent(selectedPlan.plan)}&invest=${selectedPlan.invest}&returns=${selectedPlan.returns}`;
+
+            } catch (error) {
+                console.error("Investment Error:", error);
+                alert('An error occurred: ' + error.message);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
 
