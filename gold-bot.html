@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gold Hunter AI - SummitFX</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:#0b1220;color:#f8fafc;overflow-x:hidden;padding:40px;min-height:100vh;}
+.bot-container{max-width:1000px;margin:auto;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:20px;}
+.back-btn{padding:12px 20px;background:#1e293b;border-radius:10px;color:#f8fafc;text-decoration:none;border:1px solid #334155;transition:0.3s;display:inline-flex;align-items:center;gap:8px;font-weight:600;}
+.back-btn:hover{border-color:#f5a623;color:#f5a623;transform:translateX(-3px);}
+.page-title{font-size:32px;font-weight:800;color:#f8fafc;}
+.page-title span{color:#f5a623;}
+.bot-card{background:#1e293b;border-radius:20px;padding:40px;border:1px solid #334155;position:relative;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,0.3);}
+.bot-card::before{content:'';position:absolute;width:300px;height:300px;background:radial-gradient(circle,rgba(245,166,35,0.08),transparent);border-radius:50%;top:-150px;right:-150px;}
+.status-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:20px;position:relative;z-index:2;}
+.bot-name{font-size:32px;font-weight:800;display:flex;align-items:center;gap:12px;}
+.bot-name i{color:#f5a623;font-size:36px;}
+.status{padding:10px 20px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:1px;display:inline-flex;align-items:center;gap:8px;}
+.status::before{content:'';width:8px;height:8px;border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.running{background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.3);box-shadow:0 0 20px rgba(16,185,129,0.15);}
+.running::before{background:#10b981;}
+.paused{background:rgba(245,166,35,0.1);color:#f5a623;border:1px solid rgba(245,166,35,0.3);}
+.paused::before{background:#f5a623;}
+.stopped{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);}
+.stopped::before{background:#ef4444;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:35px;position:relative;z-index:2;}
+.stat-box{background:#0b1220;padding:24px;border-radius:14px;border:1px solid #334155;transition:0.3s;}
+.stat-box:hover{transform:translateY(-4px);border-color:#f5a623;box-shadow:0 8px 20px rgba(245,166,35,0.1);}
+.stat-title{color:#94a3b8;margin-bottom:10px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:8px;}
+.stat-title i{font-size:16px;}
+.stat-value{font-size:28px;font-weight:800;font-family:'Courier New',monospace;}
+.green{color:#10b981;}.red{color:#ef4444;}.gold{color:#f5a623;}
+.chart-box{background:#0b1220;border-radius:14px;padding:24px;margin-bottom:35px;border:1px solid #334155;position:relative;z-index:2;}
+.chart-title{margin-bottom:20px;color:#94a3b8;font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:8px;}
+.chart-title i{color:#f5a623;}
+canvas{width:100%;height:320px;border-radius:8px;}
+.controls{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:35px;position:relative;z-index:2;}
+.control-btn{flex:1;min-width:180px;padding:18px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:0.3s;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:0.5px;}
+.start-btn{background:linear-gradient(135deg,#10b981,#059669);color:white;}
+.pause-btn{background:linear-gradient(135deg,#f5a623,#d48b17);color:#0b1220;}
+.stop-btn{background:linear-gradient(135deg,#ef4444,#dc2626);color:white;}
+.control-btn:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,0.3);}
+.control-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none !important;}
+.trade-log{background:#0b1220;border-radius:14px;padding:24px;border:1px solid #334155;position:relative;z-index:2;}
+.trade-log h3{margin-bottom:20px;font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px;}
+.trade-log h3 i{color:#f5a623;}
+.log-item{padding:14px 16px;border-radius:10px;margin-bottom:10px;background:#1e293b;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border:1px solid #334155;transition:0.3s;animation:slideIn 0.3s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+.log-item:hover{border-color:#f5a623;}
+.log-pair{display:flex;align-items:center;gap:10px;font-weight:600;}
+.log-type{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:0.5px;}
+.log-type.buy{background:rgba(16,185,129,0.1);color:#10b981;}
+.log-type.sell{background:rgba(239,68,68,0.1);color:#ef4444;}
+.log-profit{font-weight:700;font-family:'Courier New',monospace;font-size:15px;}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:#1e293b;border:1px solid #334155;border-radius:20px;max-width:480px;width:100%;padding:40px;text-align:center;animation:modalIn 0.3s ease;}
+@keyframes modalIn{from{opacity:0;transform:scale(0.9) translateY(-20px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.modal-icon{width:80px;height:80px;background:linear-gradient(135deg,#f5a623,#d48b17);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 10px 30px rgba(245,166,35,0.3);animation:pulseIcon 2s infinite;}
+@keyframes pulseIcon{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+.modal-icon i{font-size:36px;color:#0b1220;}
+.modal-title{font-size:24px;font-weight:800;margin-bottom:12px;color:#f8fafc;}
+.modal-subtitle{color:#94a3b8;font-size:15px;line-height:1.6;margin-bottom:24px;}
+.modal-balance{background:#0b1220;border:1px solid #334155;border-radius:12px;padding:20px;margin-bottom:24px;}
+.modal-balance-label{color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.modal-balance-value{font-size:32px;font-weight:800;color:#ef4444;font-family:'Courier New',monospace;}
+.modal-features{text-align:left;margin-bottom:24px;}
+.modal-feature{display:flex;align-items:center;gap:12px;padding:10px 14px;background:#0b1220;border-radius:10px;margin-bottom:8px;font-size:14px;}
+.modal-feature i{color:#f5a623;font-size:16px;width:20px;}
+.modal-btn{width:100%;padding:16px;background:linear-gradient(135deg,#f5a623,#d48b17);color:#0b1220;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:0.3s;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;}
+.modal-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(245,166,35,0.3);}
+.modal-cancel{width:100%;padding:14px;background:transparent;color:#94a3b8;border:1px solid #334155;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:0.3s;}
+.modal-cancel:hover{border-color:#f5a623;color:#f5a623;}
+@media(max-width:800px){body{padding:20px;}.page-title{font-size:24px;}.bot-card{padding:24px;}.bot-name{font-size:24px;}.stat-value{font-size:22px;}.controls{flex-direction:column;}.control-btn{min-width:100%;}}
+</style>
+</head>
+<body>
+<div class="bot-container">
+    <div class="topbar">
+        <a href="bots.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Bots</a>
+        <div class="page-title"><span>Gold</span> Hunter AI</div>
+    </div>
+    <div class="bot-card">
+        <div class="status-row">
+            <div class="bot-name"><i class="fas fa-coins"></i> Gold Hunter</div>
+            <div class="status stopped" id="botStatus">STOPPED</div>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-title"><i class="fas fa-wallet"></i> BALANCE</div>
+                <div class="stat-value gold" id="balance">$0.00</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title"><i class="fas fa-chart-line"></i> LIVE P/L</div>
+                <div class="stat-value green" id="livePL">+$0.00</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title"><i class="fas fa-trophy"></i> TOTAL PROFIT</div>
+                <div class="stat-value green" id="totalProfit">+$0.00</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title"><i class="fas fa-exchange-alt"></i> ACTIVE TRADES</div>
+                <div class="stat-value" id="activeTrades">0</div>
+            </div>
+        </div>
+        <div class="chart-box">
+            <div class="chart-title"><i class="fas fa-chart-area"></i> XAUUSD Live Activity</div>
+            <canvas id="chart"></canvas>
+        </div>
+        <div class="controls">
+            <button class="control-btn start-btn" id="startBtn" onclick="startBot()"><i class="fas fa-play"></i> START BOT</button>
+            <button class="control-btn pause-btn" onclick="pauseBot()"><i class="fas fa-pause"></i> PAUSE BOT</button>
+            <button class="control-btn stop-btn" onclick="stopBot()"><i class="fas fa-stop"></i> STOP BOT</button>
+        </div>
+        <div class="trade-log">
+            <h3><i class="fas fa-history"></i> Live Trade Activity</h3>
+            <div id="tradeLog"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="fundModal">
+    <div class="modal-box">
+        <div class="modal-icon"><i class="fas fa-coins"></i></div>
+        <h2 class="modal-title">Insufficient Funds</h2>
+        <p class="modal-subtitle">To activate the Gold Hunter AI bot, your account must have a minimum balance of <strong style="color:#f5a623;">$500.00</strong></p>
+        <div class="modal-balance">
+            <div class="modal-balance-label">Current Balance</div>
+            <div class="modal-balance-value" id="modalBalance">$0.00</div>
+        </div>
+        <div class="modal-features">
+            <div class="modal-feature"><i class="fas fa-check-circle"></i><span>Specialized XAUUSD algorithm</span></div>
+            <div class="modal-feature"><i class="fas fa-check-circle"></i><span>85% historical win rate</span></div>
+            <div class="modal-feature"><i class="fas fa-check-circle"></i><span>31% average ROI per cycle</span></div>
+            <div class="modal-feature"><i class="fas fa-check-circle"></i><span>High volatility optimization</span></div>
+        </div>
+        <button class="modal-btn" onclick="goToDeposit()"><i class="fas fa-arrow-down"></i> Deposit Funds Now</button>
+        <button class="modal-cancel" onclick="closeFundModal()">Cancel</button>
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://mybymdcjytslxihbgqnh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15YnltZGNqeXRzbHhpaGJncW5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzOTYzMjMsImV4cCI6MjA5NTk3MjMyM30.5VBuL938TWC0cijFPPVdd1pG7_A1dFioQ5Bhv6SnLhs';
+const { createClient } = supabase;
+const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const MIN_BALANCE = 500;
+const STOP_BALANCE = 50;
+
+let balance = 0, totalProfit = 0, livePL = 0, activeTrades = 0, running = false;
+
+const balanceEl = document.getElementById('balance');
+const livePLEl = document.getElementById('livePL');
+const totalProfitEl = document.getElementById('totalProfit');
+const activeTradesEl = document.getElementById('activeTrades');
+const statusEl = document.getElementById('botStatus');
+const tradeLog = document.getElementById('tradeLog');
+const startBtn = document.getElementById('startBtn');
+const fundModal = document.getElementById('fundModal');
+const modalBalance = document.getElementById('modalBalance');
+
+async function loadBalance(){
+    try{
+        const { data:{ session } } = await client.auth.getSession();
+        if(!session){ balanceEl.innerText = "$0.00"; return; }
+        const user = session.user;
+        const { data } = await client.from('profiles').select('*').eq('id', user.id).maybeSingle();
+        if(data) balance = Number(data.balance || 0);
+        updateUI();
+        updateStartButton();
+    } catch(err){ console.log(err); }
+}
+
+function updateStartButton(){
+    if(balance < MIN_BALANCE){
+        startBtn.disabled = true;
+        startBtn.innerHTML = '<i class="fas fa-lock"></i> INSUFFICIENT FUNDS';
+    } else {
+        startBtn.disabled = false;
+        startBtn.innerHTML = '<i class="fas fa-play"></i> START BOT';
+    }
+}
+
+const canvas = document.getElementById('chart');
+const ctx = canvas.getContext('2d');
+function resizeCanvas(){ canvas.width = canvas.offsetWidth; canvas.height = 320; }
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+let candles = [];
+let currentPrice = 2650;
+for(let i = 0; i < 45; i++){
+    let open = currentPrice;
+    let close = open + (Math.random() - 0.5) * 30;
+    let high = Math.max(open, close) + Math.random() * 15;
+    let low = Math.min(open, close) - Math.random() * 15;
+    candles.push({ open, close, high, low });
+    currentPrice = close;
+}
+
+function drawChart(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 1;
+    for(let i = 0; i < 6; i++){
+        let y = (canvas.height / 6) * i;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+    let highs = candles.map(c => c.high);
+    let lows = candles.map(c => c.low);
+    let maxPrice = Math.max(...highs);
+    let minPrice = Math.min(...lows);
+    let padding = 20;
+    let chartHeight = canvas.height - padding * 2;
+    let candleWidth = canvas.width / candles.length;
+    candles.forEach((candle, i) => {
+        let x = i * candleWidth + candleWidth / 2;
+        let openY = padding + ((maxPrice - candle.open) / (maxPrice - minPrice)) * chartHeight;
+        let closeY = padding + ((maxPrice - candle.close) / (maxPrice - minPrice)) * chartHeight;
+        let highY = padding + ((maxPrice - candle.high) / (maxPrice - minPrice)) * chartHeight;
+        let lowY = padding + ((maxPrice - candle.low) / (maxPrice - minPrice)) * chartHeight;
+        let bullish = candle.close > candle.open;
+        let color = bullish ? '#10b981' : '#ef4444';
+        ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
+        ctx.moveTo(x, highY); ctx.lineTo(x, lowY); ctx.stroke();
+        let bodyTop = Math.min(openY, closeY);
+        let bodyHeight = Math.abs(openY - closeY);
+        if(bodyHeight < 4) bodyHeight = 4;
+        ctx.fillStyle = color;
+        ctx.fillRect(x - candleWidth * 0.25, bodyTop, candleWidth * 0.5, bodyHeight);
+    });
+}
+
+function updateCandles(){
+    if(!running) return;
+    let lastClose = candles[candles.length - 1].close;
+    let open = lastClose;
+    let move = (Math.random() - 0.48) * 25;
+    let close = open + move;
+    let high = Math.max(open, close) + Math.random() * 12;
+    let low = Math.min(open, close) - Math.random() * 12;
+    candles.push({ open, close, high, low });
+    if(candles.length > 45) candles.shift();
+    drawChart();
+}
+
+function updateUI(){
+    balanceEl.innerText = '$' + balance.toFixed(2);
+    totalProfitEl.innerText = (totalProfit >= 0 ? '+' : '-') + '$' + Math.abs(totalProfit).toFixed(2);
+    livePLEl.innerText = (livePL >= 0 ? '+' : '-') + '$' + Math.abs(livePL).toFixed(2);
+    livePLEl.className = 'stat-value ' + (livePL >= 0 ? 'green' : 'red');
+    totalProfitEl.className = 'stat-value ' + (totalProfit >= 0 ? 'green' : 'red');
+    activeTradesEl.innerText = activeTrades;
+}
+
+function addTradeLog(profit){
+    const div = document.createElement('div');
+    div.className = 'log-item';
+    const type = Math.random() > 0.5 ? 'BUY' : 'SELL';
+    const typeClass = type === 'BUY' ? 'buy' : 'sell';
+    div.innerHTML = `<div class="log-pair"><span class="log-type ${typeClass}">${type}</span><span>XAUUSD</span></div><span class="log-profit" style="color:${profit >= 0 ? '#10b981' : '#ef4444'};">${profit >= 0 ? '+' : '-'}$${Math.abs(profit).toFixed(2)}</span>`;
+    tradeLog.prepend(div);
+    if(tradeLog.children.length > 10) tradeLog.removeChild(tradeLog.lastChild);
+}
+
+async function saveBalance(){
+    const { data:{ session } } = await client.auth.getSession();
+    if(!session) return;
+    await client.from('profiles').update({ balance: balance }).eq('id', session.user.id);
+}
+
+function botLoop(){
+    if(!running) return;
+    if(balance < STOP_BALANCE){
+        stopBot();
+        const div = document.createElement('div');
+        div.className = 'log-item';
+        div.style.borderColor = '#ef4444';
+        div.innerHTML = `<div class="log-pair" style="color:#ef4444;"><i class="fas fa-exclamation-triangle"></i><span>Bot Auto-Stopped</span></div><span style="color:#ef4444; font-weight:700;">Insufficient Funds</span>`;
+        tradeLog.prepend(div);
+        return;
+    }
+    let trade;
+    if(Math.random() > 0.2) trade = Math.random() * 80;
+    else trade = -(Math.random() * 40);
+    if(balance + trade < 0) trade = -balance + 1;
+    balance += trade;
+    totalProfit += trade;
+    livePL = trade;
+    activeTrades = Math.floor(Math.random() * 4) + 1;
+    updateCandles();
+    updateUI();
+    addTradeLog(trade);
+    saveBalance();
+}
+
+function startBot(){
+    if(balance < MIN_BALANCE){ showFundModal(); return; }
+    running = true;
+    statusEl.innerText = 'RUNNING';
+    statusEl.className = 'status running';
+    startBtn.disabled = true;
+    startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> RUNNING...';
+}
+
+function pauseBot(){
+    running = false;
+    statusEl.innerText = 'PAUSED';
+    statusEl.className = 'status paused';
+    startBtn.disabled = false;
+    startBtn.innerHTML = '<i class="fas fa-play"></i> START BOT';
+}
+
+function stopBot(){
+    running = false;
+    statusEl.innerText = 'STOPPED';
+    statusEl.className = 'status stopped';
+    livePL = 0;
+    activeTrades = 0;
+    updateUI();
+    updateStartButton();
+}
+
+function showFundModal(){
+    modalBalance.innerText = '$' + balance.toFixed(2);
+    fundModal.classList.add('show');
+}
+
+function closeFundModal(){
+    fundModal.classList.remove('show');
+}
+
+function goToDeposit(){
+    closeFundModal();
+    window.location.href = 'deposit.html';
+}
+
+fundModal.addEventListener('click', (e) => { if(e.target === fundModal) closeFundModal(); });
+
+drawChart();
+updateUI();
+loadBalance();
+setInterval(botLoop, 3000);
+setInterval(loadBalance, 10000);
+</script>
+</body>
+</html>
