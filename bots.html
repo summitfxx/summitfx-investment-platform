@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading Bots - SummitFX</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Inter',sans-serif;
+}
+
+body{
+    background:#0b1220;
+    color:#f8fafc;
+    display:flex;
+    overflow-x:hidden;
+    min-height:100vh;
+}
+
+/* SIDEBAR */
+.sidebar{
+    width:270px;
+    height:100vh;
+    background:#111827;
+    padding:30px 20px;
+    position:fixed;
+    left:0;
+    top:0;
+    border-right:1px solid #334155;
+    overflow-y:auto;
+    transition:0.3s;
+    z-index:1000;
+}
+
+.logo{
+    font-size:28px;
+    font-weight:800;
+    color:#f8fafc;
+    margin-bottom:40px;
+    letter-spacing:1px;
+    padding-left:10px;
+}
+
+.logo span{
+    color:#f5a623;
+}
+
+.menu{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.menu-title{
+    color:#94a3b8;
+    font-size:12px;
+    margin-top:15px;
+    margin-bottom:8px;
+    padding-left:15px;
+    letter-spacing:1px;
+    font-weight:600;
+    text-transform:uppercase;
+}
+
+.menu a{
+    text-decoration:none;
+    color:#94a3b8;
+    padding:14px 16px;
+    border-radius:10px;
+    transition:0.3s;
+    font-weight:500;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    font-size:15px;
+}
+
+.menu a i{
+    width:20px;
+    text-align:center;
+    font-size:16px;
+}
+
+.menu a:hover{
+    background:rgba(245,166,35,0.1);
+    color:#f5a623;
+}
+
+.menu a.active{
+    background:rgba(245,166,35,0.1);
+    color:#f5a623;
+    border-left:3px solid #f5a623;
+}
+
+/* MAIN */
+.main{
+    margin-left:270px;
+    width:calc(100% - 270px);
+    padding:32px;
+}
+
+/* TOPBAR */
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:32px;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+.topbar-left{
+    display:flex;
+    align-items:center;
+    gap:20px;
+}
+
+.page-title{
+    font-size:28px;
+    font-weight:700;
+}
+
+.page-subtitle{
+    color:#94a3b8;
+    margin-top:4px;
+    font-size:15px;
+}
+
+.profile{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:#1e293b;
+    padding:12px 18px;
+    border-radius:12px;
+    border:1px solid #334155;
+}
+
+.avatar{
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#f5a623,#d48b17);
+    color:#0b1220;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-weight:700;
+    font-size:18px;
+}
+
+.profile-info{
+    display:flex;
+    flex-direction:column;
+}
+
+.profile-name{
+    font-weight:600;
+    font-size:14px;
+}
+
+.profile-status{
+    color:#94a3b8;
+    font-size:12px;
+}
+
+/* MOBILE MENU */
+.menu-toggle{
+    display:none;
+    width:44px;
+    height:44px;
+    border:1px solid #334155;
+    border-radius:10px;
+    background:#1e293b;
+    color:#f5a623;
+    font-size:20px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.menu-toggle:hover{
+    background:#f5a623;
+    color:#0b1220;
+}
+
+.overlay{
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.7);
+    top:0;
+    left:0;
+    z-index:900;
+    display:none;
+}
+
+/* HERO */
+.hero{
+    background:linear-gradient(135deg,rgba(245,166,35,0.08),#1e293b);
+    border:1px solid rgba(245,166,35,0.2);
+    border-radius:16px;
+    padding:32px;
+    margin-bottom:32px;
+    position:relative;
+    overflow:hidden;
+}
+
+.hero::before{
+    content:'';
+    position:absolute;
+    top:0;
+    right:0;
+    width:300px;
+    height:300px;
+    background:radial-gradient(circle,rgba(245,166,35,0.1),transparent);
+    border-radius:50%;
+    transform:translate(100px,-100px);
+}
+
+.hero h2{
+    font-size:32px;
+    margin-bottom:12px;
+    position:relative;
+    z-index:2;
+}
+
+.hero h2 i{
+    color:#f5a623;
+    margin-right:10px;
+}
+
+.hero p{
+    color:#94a3b8;
+    line-height:1.8;
+    max-width:750px;
+    position:relative;
+    z-index:2;
+    font-size:15px;
+}
+
+/* BOT GRID */
+.bot-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:24px;
+}
+
+/* BOT CARD */
+.bot-card{
+    background:#1e293b;
+    padding:28px;
+    border-radius:16px;
+    border:1px solid #334155;
+    transition:0.3s;
+    position:relative;
+    overflow:hidden;
+}
+
+.bot-card::before{
+    content:'\f544';
+    font-family:'Font Awesome 6 Free';
+    font-weight:900;
+    position:absolute;
+    top:20px;
+    right:20px;
+    font-size:60px;
+    color:rgba(245,166,35,0.05);
+}
+
+.bot-card:hover{
+    transform:translateY(-6px);
+    border-color:#f5a623;
+    box-shadow:0 10px 30px rgba(245,166,35,0.15);
+}
+
+.bot-card h2{
+    margin-bottom:12px;
+    font-size:24px;
+    font-weight:700;
+    position:relative;
+    z-index:2;
+}
+
+.bot-card p{
+    color:#94a3b8;
+    line-height:1.7;
+    margin-bottom:20px;
+    position:relative;
+    z-index:2;
+    font-size:14px;
+}
+
+/* STATUS */
+.bot-status{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:rgba(16,185,129,0.1);
+    color:#10b981;
+    padding:6px 14px;
+    border-radius:50px;
+    font-size:12px;
+    font-weight:600;
+    margin-bottom:16px;
+    position:relative;
+    z-index:2;
+    border:1px solid rgba(16,185,129,0.2);
+}
+
+.bot-status::before{
+    content:'';
+    width:8px;
+    height:8px;
+    background:#10b981;
+    border-radius:50%;
+    animation:pulse 2s infinite;
+}
+
+@keyframes pulse{
+    0%,100%{opacity:1;}
+    50%{opacity:0.5;}
+}
+
+/* STATS */
+.stats{
+    margin-bottom:20px;
+    position:relative;
+    z-index:2;
+}
+
+.stats div{
+    margin-bottom:10px;
+    background:#0b1220;
+    padding:12px 14px;
+    border-radius:10px;
+    border:1px solid #334155;
+    font-size:14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.stats div strong{
+    color:#f5a623;
+    font-weight:700;
+}
+
+/* BUTTON */
+.view-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    text-decoration:none;
+    background:linear-gradient(135deg,#f5a623,#d48b17);
+    color:#0b1220;
+    padding:14px;
+    border-radius:10px;
+    font-weight:700;
+    transition:0.3s;
+    position:relative;
+    z-index:2;
+    font-size:15px;
+}
+
+.view-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(245,166,35,0.3);
+}
+
+/* MOBILE */
+@media(max-width:900px){
+    .sidebar{
+        left:-100%;
+    }
+    
+    .sidebar.active{
+        left:0;
+    }
+    
+    .overlay.active{
+        display:block;
+    }
+    
+    .main{
+        margin-left:0;
+        width:100%;
+        padding:20px;
+    }
+    
+    .menu-toggle{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+    }
+    
+    .page-title{
+        font-size:24px;
+    }
+    
+    .hero{
+        padding:24px;
+    }
+    
+    .hero h2{
+        font-size:26px;
+    }
+    
+    .bot-grid{
+        grid-template-columns:1fr;
+    }
+    
+    .profile{
+        width:100%;
+        justify-content:center;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <div class="logo">Summit<span>FX</span></div>
+    
+    <div class="menu">
+        <div class="menu-title">MAIN MENU</div>
+        <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+        <a href="deposit.html"><i class="fas fa-arrow-down"></i> Deposit</a>
+        <a href="withdraw.html"><i class="fas fa-arrow-up"></i> Withdraw</a>
+        <a href="bots.html" class="active"><i class="fas fa-robot"></i> Trading Bots</a>
+        <a href="plans.html"><i class="fas fa-layer-group"></i> Investment Plans</a>
+        <a href="transactions.html"><i class="fas fa-history"></i> Transactions</a>
+        
+        <div class="menu-title">ACCOUNT</div>
+        <a href="profile.html"><i class="fas fa-user"></i> My Profile</a>
+        <a href="kyc.html"><i class="fas fa-id-card"></i> Verify KYC</a>
+        <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+        <a href="index.html"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <button class="menu-toggle" id="menuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1 class="page-title">Trading Bots</h1>
+                <p class="page-subtitle">Explore powerful AI trading systems designed for different market strategies.</p>
+            </div>
+        </div>
+        
+        <div class="profile">
+            <div class="avatar">S</div>
+            <div class="profile-info">
+                <div class="profile-name">SummitFX User</div>
+                <div class="profile-status">Premium Member</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero">
+        <h2><i class="fas fa-robot"></i> Automated AI Trading Systems</h2>
+        <p>
+            Activate intelligent trading bots built for forex, gold, swing trading and hedging strategies.
+            Monitor performance, maximize profits and manage your portfolio from one secure platform.
+        </p>
+    </div>
+
+    <!-- BOT GRID -->
+    <div class="bot-grid">
+        <!-- BOT 1 -->
+        <div class="bot-card">
+            <div class="bot-status">ACTIVE</div>
+            <h2>Scalper AI</h2>
+            <p>
+                High-frequency forex AI trading bot optimized for short-term market opportunities and fast execution.
+            </p>
+            <div class="stats">
+                <div><span>ROI</span> <strong>18%</strong></div>
+                <div><span>Risk Level</span> <strong>Medium</strong></div>
+                <div><span>Win Rate</span> <strong>89%</strong></div>
+            </div>
+            <a href="scalper-bot.html" class="view-btn">
+                <i class="fas fa-eye"></i> View Bot
+            </a>
+        </div>
+
+        <!-- BOT 2 -->
+        <div class="bot-card">
+            <div class="bot-status">ACTIVE</div>
+            <h2>Swing Master</h2>
+            <p>
+                Advanced swing trading AI designed for steady growth and longer-term market positioning.
+            </p>
+            <div class="stats">
+                <div><span>Minimum Deposit</span> <strong>$100</strong></div>
+                <div><span>Potential Earnings</span> <strong>$3,500 in 24h</strong></div>
+                <div><span>Risk Level</span> <strong>Low</strong></div>
+                <div><span>Win Rate</span> <strong>94%</strong></div>
+            </div>
+            <a href="swing-bot.html" class="view-btn">
+                <i class="fas fa-eye"></i> View Bot
+            </a>
+        </div>
+
+        <!-- BOT 3 -->
+        <div class="bot-card">
+            <div class="bot-status">ACTIVE</div>
+            <h2>Gold Hunter</h2>
+            <p>
+                AI-powered XAU/USD gold trading automation system focused on high volatility opportunities.
+            </p>
+            <div class="stats">
+                <div><span>ROI</span> <strong>31%</strong></div>
+                <div><span>Risk Level</span> <strong>High</strong></div>
+                <div><span>Win Rate</span> <strong>85%</strong></div>
+            </div>
+            <a href="gold-bot.html" class="view-btn">
+                <i class="fas fa-eye"></i> View Bot
+            </a>
+        </div>
+
+        <!-- BOT 4 -->
+        <div class="bot-card">
+            <div class="bot-status">ACTIVE</div>
+            <h2>Smart Hedge AI</h2>
+            <p>
+                Intelligent hedging system created for portfolio protection and controlled risk management.
+            </p>
+            <div class="stats">
+                <div><span>ROI</span> <strong>15%</strong></div>
+                <div><span>Risk Level</span> <strong>Low</strong></div>
+                <div><span>Win Rate</span> <strong>95%</strong></div>
+            </div>
+            <a href="hedge-bot.html" class="view-btn">
+                <i class="fas fa-eye"></i> View Bot
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+/* MOBILE MENU */
+const sidebar = document.getElementById("sidebar");
+const menuBtn = document.getElementById("menuBtn");
+const overlay = document.getElementById("overlay");
+
+menuBtn.addEventListener("click", () => {
+    sidebar.classList.toggle("active");
+    overlay.classList.toggle("active");
+});
+
+overlay.addEventListener("click", () => {
+    sidebar.classList.remove("active");
+    overlay.classList.remove("active");
+});
+</script>
+
+</body>
+</html>
