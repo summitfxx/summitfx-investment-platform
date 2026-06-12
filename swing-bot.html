@@ -316,6 +316,12 @@ canvas{
     transform:translateY(0);
 }
 
+.control-btn:disabled{
+    opacity:0.5;
+    cursor:not-allowed;
+    transform:none !important;
+}
+
 /* TRADE LOG */
 .trade-log{
     background:#0b1220;
@@ -398,6 +404,171 @@ canvas{
     font-weight:700;
     font-family:'Courier New',monospace;
     font-size:15px;
+}
+
+/* FUND REQUIRED MODAL */
+.modal-overlay{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.8);
+    backdrop-filter:blur(6px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+    padding:20px;
+}
+
+.modal-overlay.show{
+    display:flex;
+}
+
+.modal-box{
+    background:#1e293b;
+    border:1px solid #334155;
+    border-radius:20px;
+    max-width:480px;
+    width:100%;
+    padding:40px;
+    text-align:center;
+    animation:modalIn 0.3s ease;
+}
+
+@keyframes modalIn{
+    from{
+        opacity:0;
+        transform:scale(0.9) translateY(-20px);
+    }
+    to{
+        opacity:1;
+        transform:scale(1) translateY(0);
+    }
+}
+
+.modal-icon{
+    width:80px;
+    height:80px;
+    background:linear-gradient(135deg,#f5a623,#d48b17);
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:0 auto 24px;
+    box-shadow:0 10px 30px rgba(245,166,35,0.3);
+    animation:pulseIcon 2s infinite;
+}
+
+@keyframes pulseIcon{
+    0%,100%{transform:scale(1);}
+    50%{transform:scale(1.05);}
+}
+
+.modal-icon i{
+    font-size:36px;
+    color:#0b1220;
+}
+
+.modal-title{
+    font-size:24px;
+    font-weight:800;
+    margin-bottom:12px;
+    color:#f8fafc;
+}
+
+.modal-subtitle{
+    color:#94a3b8;
+    font-size:15px;
+    line-height:1.6;
+    margin-bottom:24px;
+}
+
+.modal-balance{
+    background:#0b1220;
+    border:1px solid #334155;
+    border-radius:12px;
+    padding:20px;
+    margin-bottom:24px;
+}
+
+.modal-balance-label{
+    color:#94a3b8;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin-bottom:8px;
+}
+
+.modal-balance-value{
+    font-size:32px;
+    font-weight:800;
+    color:#ef4444;
+    font-family:'Courier New',monospace;
+}
+
+.modal-features{
+    text-align:left;
+    margin-bottom:24px;
+}
+
+.modal-feature{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 14px;
+    background:#0b1220;
+    border-radius:10px;
+    margin-bottom:8px;
+    font-size:14px;
+}
+
+.modal-feature i{
+    color:#f5a623;
+    font-size:16px;
+    width:20px;
+}
+
+.modal-btn{
+    width:100%;
+    padding:16px;
+    background:linear-gradient(135deg,#f5a623,#d48b17);
+    color:#0b1220;
+    border:none;
+    border-radius:12px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    transition:0.3s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:12px;
+}
+
+.modal-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(245,166,35,0.3);
+}
+
+.modal-cancel{
+    width:100%;
+    padding:14px;
+    background:transparent;
+    color:#94a3b8;
+    border:1px solid #334155;
+    border-radius:12px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.modal-cancel:hover{
+    border-color:#f5a623;
+    color:#f5a623;
 }
 
 /* MOBILE */
@@ -505,7 +676,7 @@ canvas{
 
         <!-- CONTROLS -->
         <div class="controls">
-            <button class="control-btn start-btn" onclick="startBot()">
+            <button class="control-btn start-btn" id="startBtn" onclick="startBot()">
                 <i class="fas fa-play"></i> START BOT
             </button>
             <button class="control-btn pause-btn" onclick="pauseBot()">
@@ -528,6 +699,50 @@ canvas{
 
 </div>
 
+<!-- FUND REQUIRED MODAL -->
+<div class="modal-overlay" id="fundModal">
+    <div class="modal-box">
+        <div class="modal-icon">
+            <i class="fas fa-wallet"></i>
+        </div>
+        <h2 class="modal-title">Insufficient Funds</h2>
+        <p class="modal-subtitle">
+            To activate the Swing Master AI bot, your account must have a minimum balance of <strong style="color:#f5a623;">$100.00</strong>
+        </p>
+        
+        <div class="modal-balance">
+            <div class="modal-balance-label">Current Balance</div>
+            <div class="modal-balance-value" id="modalBalance">$0.00</div>
+        </div>
+        
+        <div class="modal-features">
+            <div class="modal-feature">
+                <i class="fas fa-check-circle"></i>
+                <span>AI-powered automated trading</span>
+            </div>
+            <div class="modal-feature">
+                <i class="fas fa-check-circle"></i>
+                <span>94% historical win rate</span>
+            </div>
+            <div class="modal-feature">
+                <i class="fas fa-check-circle"></i>
+                <span>24/7 market monitoring</span>
+            </div>
+            <div class="modal-feature">
+                <i class="fas fa-check-circle"></i>
+                <span>Real-time profit tracking</span>
+            </div>
+        </div>
+        
+        <button class="modal-btn" onclick="goToDeposit()">
+            <i class="fas fa-arrow-down"></i> Deposit Funds Now
+        </button>
+        <button class="modal-cancel" onclick="closeFundModal()">
+            Cancel
+        </button>
+    </div>
+</div>
+
 <script>
 
 /* SUPABASE */
@@ -536,6 +751,10 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const { createClient } = supabase;
 const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* BOT CONFIGURATION */
+const MIN_BALANCE = 100; // Minimum balance required to run bot
+const STOP_BALANCE = 10; // Auto-stop if balance drops below this
 
 /* BOT DATA */
 let balance = 0;
@@ -551,6 +770,9 @@ const totalProfitEl = document.getElementById('totalProfit');
 const activeTradesEl = document.getElementById('activeTrades');
 const statusEl = document.getElementById('botStatus');
 const tradeLog = document.getElementById('tradeLog');
+const startBtn = document.getElementById('startBtn');
+const fundModal = document.getElementById('fundModal');
+const modalBalance = document.getElementById('modalBalance');
 
 /* LOAD USER ACCOUNT */
 async function loadBalance(){
@@ -574,9 +796,21 @@ async function loadBalance(){
         }
         
         updateUI();
+        updateStartButton();
     }
     catch(err){
         console.log(err);
+    }
+}
+
+/* UPDATE START BUTTON STATE */
+function updateStartButton(){
+    if(balance < MIN_BALANCE){
+        startBtn.disabled = true;
+        startBtn.innerHTML = '<i class="fas fa-lock"></i> INSUFFICIENT FUNDS';
+    } else {
+        startBtn.disabled = false;
+        startBtn.innerHTML = '<i class="fas fa-play"></i> START BOT';
     }
 }
 
@@ -736,6 +970,24 @@ async function saveBalance(){
 function botLoop(){
     if(!running) return;
     
+    // SAFETY CHECK: Auto-stop if balance too low
+    if(balance < STOP_BALANCE){
+        stopBot();
+        addTradeLog(0);
+        const div = document.createElement('div');
+        div.className = 'log-item';
+        div.style.borderColor = '#ef4444';
+        div.innerHTML = `
+            <div class="log-pair" style="color:#ef4444;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Bot Auto-Stopped</span>
+            </div>
+            <span style="color:#ef4444; font-weight:700;">Insufficient Funds</span>
+        `;
+        tradeLog.prepend(div);
+        return;
+    }
+    
     let trade;
     
     if(Math.random() > 0.2){
@@ -743,6 +995,11 @@ function botLoop(){
     }
     else{
         trade = -(Math.random() * 20);
+    }
+    
+    // Prevent balance from going negative
+    if(balance + trade < 0){
+        trade = -balance + 1; // Only lose what's available
     }
     
     balance += trade;
@@ -756,11 +1013,19 @@ function botLoop(){
     saveBalance();
 }
 
-/* START */
+/* START BOT */
 function startBot(){
+    // CHECK BALANCE BEFORE STARTING
+    if(balance < MIN_BALANCE){
+        showFundModal();
+        return;
+    }
+    
     running = true;
     statusEl.innerText = 'RUNNING';
     statusEl.className = 'status running';
+    startBtn.disabled = true;
+    startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> RUNNING...';
 }
 
 /* PAUSE */
@@ -768,6 +1033,8 @@ function pauseBot(){
     running = false;
     statusEl.innerText = 'PAUSED';
     statusEl.className = 'status paused';
+    startBtn.disabled = false;
+    startBtn.innerHTML = '<i class="fas fa-play"></i> START BOT';
 }
 
 /* STOP */
@@ -778,13 +1045,39 @@ function stopBot(){
     livePL = 0;
     activeTrades = 0;
     updateUI();
+    updateStartButton();
 }
+
+/* FUND MODAL FUNCTIONS */
+function showFundModal(){
+    modalBalance.innerText = '$' + balance.toFixed(2);
+    fundModal.classList.add('show');
+}
+
+function closeFundModal(){
+    fundModal.classList.remove('show');
+}
+
+function goToDeposit(){
+    closeFundModal();
+    window.location.href = 'deposit.html';
+}
+
+/* Close modal on outside click */
+fundModal.addEventListener('click', (e) => {
+    if(e.target === fundModal){
+        closeFundModal();
+    }
+});
 
 /* INITIALIZE */
 drawChart();
 updateUI();
 loadBalance();
 setInterval(botLoop, 3000);
+
+/* Refresh balance every 10 seconds */
+setInterval(loadBalance, 10000);
 
 </script>
 
