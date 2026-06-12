@@ -554,6 +554,7 @@
             const now = new Date();
             document.getElementById('priceTime').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
             
+            // Calculate Margin (Price * Lot / 100 Leverage)
             const margin = (currentPrice * currentLot) / 100;
             document.getElementById('margin').textContent = margin.toFixed(2);
         }
@@ -575,11 +576,20 @@
             document.getElementById('margin').textContent = margin.toFixed(2);
         }
 
-        // --- OPEN TRADE ---
+        // --- OPEN TRADE (WITH BALANCE CHECK) ---
         async function openTrade(type) {
             if (!currentUser) {
                 showToast('Please log in to trade', true);
                 return;
+            }
+
+            // 1. Calculate Required Margin
+            const requiredMargin = (currentPrice * currentLot) / 100;
+
+            // 2. Check if User Has Enough Balance
+            if (userBalance < requiredMargin) {
+                showToast(`Insufficient Balance! Required: $${requiredMargin.toFixed(2)}, Available: $${userBalance.toFixed(2)}`, true);
+                return; // STOP the trade
             }
 
             const price = type === 'SELL' ? sellPrice : buyPrice;
@@ -604,7 +614,7 @@
 
                 openPositions.push(data[0]);
                 renderPositions();
-                showToast(`${type} ${currentSymbol} opened! Lot: ${currentLot}`);
+                showToast(`${type} ${currentSymbol} opened! Margin used: $${requiredMargin.toFixed(2)}`);
                 
             } catch (error) {
                 console.error('Trade error:', error);
