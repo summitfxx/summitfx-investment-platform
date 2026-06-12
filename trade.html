@@ -100,6 +100,28 @@
             font-size: 12px; font-weight: 600; transition: all 0.2s;
         }
         .copy-btn:hover { background: #f5a623; color: #000; }
+        
+        /* Fund Required Modal Styles */
+        .fund-required-icon {
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .fund-feature {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px; background: #2a2e39; border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .fund-feature i { color: #f5a623; font-size: 18px; width: 24px; }
+        .fund-feature span { font-size: 14px; color: #e2e8f0; }
     </style>
 </head>
 <body class="text-white h-screen overflow-hidden flex">
@@ -290,7 +312,60 @@
         </div>
     </div>
 
-    <!-- MT5 Connection Modal -->
+    <!-- MT5 FUND REQUIRED MODAL (NEW) -->
+    <div class="modal-overlay" id="mt5FundModal">
+        <div class="modal-box" style="max-width: 500px;">
+            <div class="p-8 text-center">
+                <button onclick="closeModal('mt5FundModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                
+                <!-- Animated Icon -->
+                <div class="fund-required-icon">
+                    <i class="fas fa-wallet text-white text-3xl"></i>
+                </div>
+                
+                <h2 class="text-2xl font-bold text-white mb-2">Fund Your Account</h2>
+                <p class="text-slate-400 mb-6">To access your MetaTrader 5 credentials and begin trading, please fund your account with a minimum deposit.</p>
+                
+                <!-- Features List -->
+                <div class="text-left mb-6">
+                    <div class="fund-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Instant MT5 login credentials</span>
+                    </div>
+                    <div class="fund-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Access to 100+ trading instruments</span>
+                    </div>
+                    <div class="fund-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Professional-grade execution</span>
+                    </div>
+                    <div class="fund-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>24/5 market access</span>
+                    </div>
+                </div>
+                
+                <!-- Current Balance Display -->
+                <div class="bg-slate-800 rounded-lg p-4 mb-6">
+                    <p class="text-xs text-slate-400 mb-1">Current Balance</p>
+                    <p class="text-2xl font-bold text-amber-500">$<span id="fund-modal-balance">0.00</span></p>
+                </div>
+                
+                <!-- Action Button -->
+                <button onclick="goToDeposit()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-bold py-4 rounded-lg transition-all flex items-center justify-center gap-2 text-lg">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>Deposit Funds Now</span>
+                </button>
+                
+                <p class="text-xs text-slate-500 mt-4">Deposits are processed instantly. Minimum: $50</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MT5 Connection Modal (ORIGINAL - Shows when funded) -->
     <div class="modal-overlay" id="mt5Modal">
         <div class="modal-box" style="max-width: 500px;">
             <!-- Modal Header -->
@@ -563,8 +638,22 @@
             }
         }
 
+        // --- MT5 MODAL GATE (NEW LOGIC) ---
         function openMT5Modal() {
-            document.getElementById('mt5Modal').classList.add('show');
+            // Check if user has funded their account
+            if (userBalance <= 0) {
+                // Show Fund Required Modal
+                document.getElementById('fund-modal-balance').textContent = userBalance.toFixed(2);
+                document.getElementById('mt5FundModal').classList.add('show');
+            } else {
+                // Show MT5 Credentials Modal
+                document.getElementById('mt5Modal').classList.add('show');
+            }
+        }
+
+        function goToDeposit() {
+            closeModal('mt5FundModal');
+            window.location.href = 'deposit.html';
         }
 
         function copyToClipboard(elementId) {
