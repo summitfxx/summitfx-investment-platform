@@ -97,15 +97,16 @@
         /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .modal-overlay.show { display: flex; }
-        .modal { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; animation: modalIn 0.3s ease; }
+        .modal { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; animation: modalIn 0.3s ease; }
         @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         .modal-header h3 { font-size: 20px; font-weight: 700; }
         .modal-close { background: var(--bg-secondary); border: none; color: var(--text-secondary); font-size: 16px; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .modal-close:hover { background: var(--danger); color: white; }
         .doc-preview { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-        .doc-preview img { width: 100%; border-radius: 8px; border: 1px solid var(--border-color); }
-        .doc-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; }
+        .doc-preview-item { background: var(--bg-secondary); border-radius: 12px; padding: 16px; border: 1px solid var(--border-color); }
+        .doc-preview img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); }
+        .doc-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
         .modal-actions button { flex: 1; padding: 14px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; transition: all 0.2s; }
 
@@ -264,10 +265,22 @@
             </div>
             <p style="color: var(--text-secondary); margin-bottom: 16px;">User: <strong id="kyc-modal-user" style="color: var(--text-primary);"></strong></p>
             <div class="doc-preview" id="kyc-doc-preview">
-                <div><div class="doc-label">ID Front</div><img id="doc-id-front" src="" alt="ID Front"></div>
-                <div><div class="doc-label">ID Back</div><img id="doc-id-back" src="" alt="ID Back"></div>
-                <div><div class="doc-label">Proof of Address</div><img id="doc-poa" src="" alt="POA"></div>
-                <div><div class="doc-label">Selfie</div><img id="doc-selfie" src="" alt="Selfie"></div>
+                <div class="doc-preview-item">
+                    <div class="doc-label">ID Front</div>
+                    <img id="doc-id-front" src="https://via.placeholder.com/400x200/1e293b/94a3b8?text=Loading..." alt="ID Front">
+                </div>
+                <div class="doc-preview-item">
+                    <div class="doc-label">ID Back</div>
+                    <img id="doc-id-back" src="https://via.placeholder.com/400x200/1e293b/94a3b8?text=Loading..." alt="ID Back">
+                </div>
+                <div class="doc-preview-item">
+                    <div class="doc-label">Proof of Address</div>
+                    <img id="doc-poa" src="https://via.placeholder.com/400x200/1e293b/94a3b8?text=Loading..." alt="POA">
+                </div>
+                <div class="doc-preview-item">
+                    <div class="doc-label">Selfie</div>
+                    <img id="doc-selfie" src="https://via.placeholder.com/400x200/1e293b/94a3b8?text=Loading..." alt="Selfie">
+                </div>
             </div>
             <div class="modal-actions">
                 <button class="btn-reject" style="padding: 14px;" onclick="rejectKYC()"><i class="fas fa-times"></i> Reject</button>
@@ -377,7 +390,7 @@
         // --- KYC ---
         async function loadKYC() {
             try {
-                const { data: profiles } = await supabaseClient.from('profiles').select('*').eq('kyc_status', 'under_review');
+                const { data: profiles } = await supabaseClient.from('profiles').select('*').in('kyc_status', ['under_review', 'pending_submission']);
                 const tbody = document.getElementById('kyc-body');
                 document.getElementById('kyc-count').innerText = profiles ? profiles.length : 0;
 
@@ -390,8 +403,8 @@
                     <tr>
                         <td><strong>${p.first_name || ''} ${p.last_name || ''}</strong></td>
                         <td>${p.email}</td>
-                        <td><span class="badge badge-review">Under Review</span></td>
-                        <td>${new Date(p.updated_at || p.created_at).toLocaleDateString()}</td>
+                        <td><span class="badge badge-review">${p.kyc_status === 'under_review' ? 'Under Review' : 'Pending'}</span></td>
+                        <td>${new Date(p.kyc_submitted_at || p.updated_at || p.created_at).toLocaleDateString()}</td>
                         <td>
                             <button class="action-btn btn-view" onclick="viewKYC('${p.id}', '${p.email}')"><i class="fas fa-eye"></i> Review</button>
                         </td>
@@ -406,25 +419,56 @@
             currentKycUserId = userId;
             document.getElementById('kyc-modal-user').innerText = email;
             
-            // Try to load documents from storage
-            const docs = ['id_front', 'id_back', 'proof_of_address', 'selfie'];
-            const imgIds = ['doc-id-front', 'doc-id-back', 'doc-poa', 'doc-selfie'];
-            
-            for (let i = 0; i < docs.length; i++) {
-                try {
-                    const { data: files } = await supabaseClient.storage.from('kyc-documents').list(userId);
-                    if (files) {
-                        const match = files.find(f => f.name.startsWith(docs[i]));
-                        if (match) {
-                            const { data: { publicUrl } } = supabaseClient.storage.from('kyc-documents').getPublicUrl(`${userId}/${match.name}`);
-                            document.getElementById(imgIds[i]).src = publicUrl;
-                        }
-                    }
-                } catch (e) {
-                    console.warn(`Could not load ${docs[i]}`);
+            // Reset images to loading placeholders
+            const placeholders = ['doc-id-front', 'doc-id-back', 'doc-poa', 'doc-selfie'];
+            placeholders.forEach(id => {
+                document.getElementById(id).src = 'https://via.placeholder.com/400x200/1e293b/94a3b8?text=Loading...';
+            });
+
+            try {
+                // List all files in the user's folder
+                const { data: files, error } = await supabaseClient.storage
+                    .from('kyc-documents')
+                    .list(userId);
+
+                if (error) {
+                    console.error("Storage list error:", error);
+                    showToast('Error loading documents: ' + error.message, true);
+                    return;
                 }
+
+                if (files && files.length > 0) {
+                    // Process each file
+                    files.forEach(file => {
+                        const { data: { publicUrl } } = supabaseClient.storage
+                            .from('kyc-documents')
+                            .getPublicUrl(`${userId}/${file.name}`);
+
+                        const name = file.name.toLowerCase();
+
+                        // Smart matching based on filename
+                        if (name.includes('front') || name.includes('id1') || name.includes('id_front')) {
+                            document.getElementById('doc-id-front').src = publicUrl;
+                        } 
+                        else if (name.includes('back') || name.includes('id2') || name.includes('id_back')) {
+                            document.getElementById('doc-id-back').src = publicUrl;
+                        } 
+                        else if (name.includes('selfie') || name.includes('photo') || name.includes('face')) {
+                            document.getElementById('doc-selfie').src = publicUrl;
+                        } 
+                        else if (name.includes('proof') || name.includes('address') || name.includes('bill') || name.includes('utility')) {
+                            document.getElementById('doc-poa').src = publicUrl;
+                        }
+                    });
+                } else {
+                    showToast('No documents found for this user', true);
+                }
+                
+            } catch (err) {
+                console.error("Error loading KYC docs:", err);
+                showToast('Error loading documents', true);
             }
-            
+
             document.getElementById('kyc-modal').classList.add('show');
         }
 
@@ -534,9 +578,6 @@
             
             // 1. Update transaction status
             await supabaseClient.from('transactions').update({ status: 'completed' }).eq('id', txId);
-            
-            // 2. Debit user balance (already deducted when they requested, but just in case)
-            // Balance was already deducted when the request was made, so we just mark it complete.
 
             showToast('Withdrawal approved!');
             loadAllData();
