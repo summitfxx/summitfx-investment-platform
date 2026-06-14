@@ -135,13 +135,19 @@
             align-items: center;
             gap: 16px;
             margin-bottom: 32px;
+            transition: all 0.3s ease;
         }
         .status-banner.verified {
             background: rgba(16, 185, 129, 0.1);
             border-color: rgba(16, 185, 129, 0.3);
         }
+        .status-banner.rejected {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
         .status-banner i { font-size: 24px; color: var(--warning); }
         .status-banner.verified i { color: var(--success); }
+        .status-banner.rejected i { color: var(--danger); }
         .status-banner h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
         .status-banner p { font-size: 14px; color: var(--text-secondary); }
 
@@ -512,14 +518,14 @@
         let currentUserId = null;
         let kycStatus = 'pending_submission'; // 'pending_submission', 'under_review', 'verified', 'rejected'
 
-        // --- LOAD KYC STATUS ---
+        // --- LOAD KYC STATUS (FIXED: NOW CHECKS PROFILES TABLE) ---
         async function loadKYCStatus() {
             try {
                 if (!supabaseClient) return;
                 
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) {
-                    // window.location.href = 'index.html';
+                    window.location.href = 'index.html';
                     return;
                 }
 
@@ -527,9 +533,23 @@
                 document.getElementById('user-email').innerText = session.user.email;
                 document.getElementById('user-avatar-btn').innerText = session.user.email.charAt(0).toUpperCase();
 
-                // Fetch KYC status from user metadata or profiles table
-                const userMetadata = session.user.user_metadata || {};
-                kycStatus = userMetadata.kyc_status || 'pending_submission';
+                // Fetch KYC status from profiles table (NOT user metadata)
+                const { data: profile, error } = await supabaseClient
+                    .from('profiles')
+                    .select('kyc_status')
+                    .eq('id', currentUserId)
+                    .single();
+
+                if (error) {
+                    console.error("Error fetching profile:", error);
+                    return;
+                }
+
+                if (profile && profile.kyc_status) {
+                    kycStatus = profile.kyc_status;
+                } else {
+                    kycStatus = 'pending_submission';
+                }
 
                 updateStatusUI(kycStatus);
 
@@ -564,14 +584,13 @@
                 icon.className = 'fas fa-check-circle';
                 title.innerText = 'KYC Status: Verified';
                 desc.innerText = 'Your identity has been successfully verified. You now have access to all platform features.';
+                showToast('Congratulations! Your KYC has been approved!', false);
             } else if (status === 'rejected') {
+                banner.classList.add('rejected');
                 icon.className = 'fas fa-times-circle';
-                icon.style.color = 'var(--danger)';
-                banner.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-                banner.style.background = 'rgba(239, 68, 68, 0.1)';
                 title.innerText = 'KYC Status: Rejected';
-                title.style.color = 'var(--danger)';
                 desc.innerText = 'Your documents were rejected. Please ensure all guidelines are met and re-upload.';
+                showToast('Your KYC was rejected. Please resubmit.', true);
             }
         }
 
@@ -623,7 +642,7 @@
             document.getElementById(nameId).innerText = '';
         }
 
-        // --- SUBMIT KYC (FIXED: NOW UPLOADS REAL FILES TO SUPABASE) ---
+        // --- SUBMIT KYC (FIXED: NOW UPDATES PROFILES TABLE) ---
         async function submitKYC() {
             const idFront = document.getElementById('input-id-front').files[0];
             const idBack = document.getElementById('input-id-back').files[0];
@@ -661,10 +680,14 @@
                     await uploadFile(selfieInput.files[0], 'selfie');
                 }
 
-                // 3. Update user metadata to reflect 'under_review'
-                const { error: updateError } = await supabaseClient.auth.updateUser({
-                    data: { kyc_status: 'under_review' }
-                });
+                // 3. Update profiles table to reflect 'under_review' (FIXED!)
+                const { error: updateError } = await supabaseClient
+                    .from('profiles')
+                    .update({ 
+                        kyc_status: 'under_review',
+                        kyc_submitted_at: new Date().toISOString()
+                    })
+                    .eq('id', currentUserId);
 
                 if (updateError) throw updateError;
 
@@ -730,6 +753,9 @@
 
         // Initialize
         loadKYCStatus();
+
+        // AUTO-REFRESH: Check KYC status every 10 seconds
+        setInterval(loadKYCStatus, 10000);
     </script>
 </body>
 </html>
