@@ -474,18 +474,42 @@
 
         async function approveKYC() {
             if (!currentKycUserId) return;
-            await supabaseClient.from('profiles').update({ kyc_status: 'verified' }).eq('id', currentKycUserId);
+            
+            const { error } = await supabaseClient
+                .from('profiles')
+                .update({ kyc_status: 'verified' })
+                .eq('id', currentKycUserId);
+            
+            if (error) {
+                console.error('Approve error:', error);
+                showToast('Error: ' + error.message, true);
+                return;
+            }
+            
             showToast('KYC Approved successfully!');
             closeModal('kyc-modal');
-            loadKYC();
+            loadKYC(); 
+            loadUsers(); // This refreshes the Users tab so you can see them
         }
 
         async function rejectKYC() {
             if (!currentKycUserId) return;
-            await supabaseClient.from('profiles').update({ kyc_status: 'rejected' }).eq('id', currentKycUserId);
+            
+            const { error } = await supabaseClient
+                .from('profiles')
+                .update({ kyc_status: 'rejected' })
+                .eq('id', currentKycUserId);
+            
+            if (error) {
+                console.error('Reject error:', error);
+                showToast('Error: ' + error.message, true);
+                return;
+            }
+            
             showToast('KYC Rejected.', true);
             closeModal('kyc-modal');
             loadKYC();
+            loadUsers(); // This refreshes the Users tab
         }
 
         // --- DEPOSITS ---
