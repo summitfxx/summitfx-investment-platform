@@ -24,6 +24,94 @@
             overflow-x:hidden;
         }
 
+        /* --- Top Navigation Bar --- */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #0f172a;
+            border-bottom: 1px solid rgba(255,255,255,.05);
+            z-index: 1000;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .top-nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .top-nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            transition: .3s;
+            padding: 8px 0;
+            position: relative;
+        }
+
+        .top-nav-links a:hover,
+        .top-nav-links a.active {
+            color: #f5a623;
+        }
+
+        .top-nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #f5a623;
+        }
+
+        .top-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .hot-badge {
+            background: #f5a623;
+            color: #000;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hot-badge i {
+            font-size: 10px;
+        }
+
+        .user-avatar-top {
+            width: 40px;
+            height: 40px;
+            background: #f5a623;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            transition: .3s;
+        }
+
+        .user-avatar-top:hover {
+            transform: scale(1.05);
+        }
+
         /* --- Sidebar --- */
         .sidebar {
             width: 280px;
@@ -35,6 +123,7 @@
             flex-direction: column;
             padding: 20px 0;
             z-index: 100;
+            top: 64px;
         }
 
         .logo {
@@ -109,6 +198,7 @@
             flex: 1;
             padding: 40px;
             width: calc(100% - 280px);
+            margin-top: 64px;
         }
 
         .top-bar {
@@ -912,6 +1002,12 @@
         }
 
         @media (max-width: 768px) {
+            .top-nav {
+                padding: 0 16px;
+            }
+            .top-nav-links {
+                gap: 20px;
+            }
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
             .main-content { margin-left: 0; width: 100%; padding: 24px; }
@@ -924,6 +1020,23 @@
     </style>
 </head>
 <body>
+
+    <!-- Top Navigation Bar -->
+    <nav class="top-nav">
+        <div class="top-nav-links">
+            <a href="#" class="active">Home</a>
+            <a href="#">Markets</a>
+            <a href="#">Wallet</a>
+            <a href="#">Settings</a>
+        </div>
+        <div class="top-nav-right">
+            <div class="hot-badge">
+                <i class="fas fa-fire"></i>
+                HOT
+            </div>
+            <div class="user-avatar-top" id="user-avatar-top">S</div>
+        </div>
+    </nav>
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
@@ -1297,6 +1410,13 @@
                 const email = session.user.email;
                 document.getElementById('user-email').innerText = email;
                 avatarBtn.innerText = email.charAt(0).toUpperCase();
+                
+                // Update top nav avatar
+                const topAvatar = document.getElementById('user-avatar-top');
+                if (topAvatar) {
+                    topAvatar.innerText = email.charAt(0).toUpperCase();
+                }
+                
                 await fetchUserData(session.user.id);
                 initChat(session.user.id);
             }
