@@ -88,6 +88,8 @@
         .btn-reject:hover { background: #dc2626; transform: translateY(-1px); }
         .btn-view { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
         .btn-view:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+        .btn-credit { background: var(--accent-gold); color: var(--bg-primary); }
+        .btn-credit:hover { background: var(--accent-gold-hover); transform: translateY(-1px); }
 
         /* Empty State */
         .empty-state { text-align: center; padding: 48px 24px; color: var(--text-secondary); }
@@ -109,6 +111,18 @@
         .doc-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
         .modal-actions button { flex: 1; padding: 14px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; transition: all 0.2s; }
+
+        /* Credit Modal Form */
+        .credit-form { margin-top: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 16px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent-gold); }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .user-info-box { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+        .user-info-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+        .user-info-row .label { color: var(--text-secondary); }
+        .user-info-row .value { font-weight: 600; color: var(--text-primary); }
 
         /* Toast */
         .toast { position: fixed; bottom: 32px; right: 32px; padding: 14px 24px; border-radius: 10px; font-weight: 600; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); transform: translateY(100px); opacity: 0; transition: all 0.3s ease; z-index: 2000; }
@@ -520,9 +534,9 @@
             <div class="section-header"><h2><i class="fas fa-users" style="color: #3b82f6;"></i> All Users</h2></div>
             <div class="table-wrapper">
                 <table>
-                    <thead><tr><th>User</th><th>Email</th><th>Balance</th><th>Total Deposits</th><th>KYC Status</th><th>Joined</th></tr></thead>
+                    <thead><tr><th>User</th><th>Email</th><th>Balance</th><th>Total Deposits</th><th>KYC Status</th><th>Joined</th><th>Actions</th></tr></thead>
                     <tbody id="users-body">
-                        <tr><td colspan="6" class="loading-spinner"><i class="fas fa-circle-notch"></i><br>Loading...</td></tr>
+                        <tr><td colspan="7" class="loading-spinner"><i class="fas fa-circle-notch"></i><br>Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -571,6 +585,55 @@
             <div class="modal-actions">
                 <button class="btn-reject" style="padding: 14px;" onclick="rejectKYC()"><i class="fas fa-times"></i> Reject</button>
                 <button class="btn-approve" style="padding: 14px;" onclick="approveKYC()"><i class="fas fa-check"></i> Approve</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credit User Modal -->
+    <div class="modal-overlay" id="credit-modal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-coins" style="color: var(--accent-gold);"></i> Credit User</h3>
+                <button class="modal-close" onclick="closeModal('credit-modal')"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="user-info-box">
+                <div class="user-info-row">
+                    <span class="label">User Email</span>
+                    <span class="value" id="credit-user-email">-</span>
+                </div>
+                <div class="user-info-row">
+                    <span class="label">Current Balance</span>
+                    <span class="value" id="credit-user-balance" style="color: var(--accent-gold);">$0.00</span>
+                </div>
+            </div>
+            
+            <div class="credit-form">
+                <div class="form-group">
+                    <label>Credit Amount ($)</label>
+                    <input type="number" id="credit-amount" placeholder="Enter amount to credit" min="0.01" step="0.01">
+                </div>
+                
+                <div class="form-group">
+                    <label>Transaction Type</label>
+                    <select id="credit-type">
+                        <option value="admin_credit">Admin Credit</option>
+                        <option value="bonus">Bonus</option>
+                        <option value="refund">Refund</option>
+                        <option value="compensation">Compensation</option>
+                        <option value="profit">Profit</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Description (Optional)</label>
+                    <textarea id="credit-description" placeholder="Reason for crediting this user..."></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn-reject" style="padding: 14px;" onclick="closeModal('credit-modal')"><i class="fas fa-times"></i> Cancel</button>
+                <button class="btn-approve" style="padding: 14px;" onclick="confirmCreditUser()"><i class="fas fa-check"></i> Credit User</button>
             </div>
         </div>
     </div>
@@ -626,6 +689,7 @@
         let selectedChatUserId = null;
         let chatChannel = null;
         let unreadMessages = {};
+        let creditUserId = null;
 
         // --- ADMIN ACCESS CHECK ---
         async function checkAdmin() {
@@ -932,7 +996,7 @@
                 const tbody = document.getElementById('users-body');
 
                 if (!profiles || profiles.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="fas fa-users"></i><h3>No users yet</h3></td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="fas fa-users"></i><h3>No users yet</h3></td></tr>';
                     return;
                 }
 
@@ -944,10 +1008,82 @@
                         <td>$${(parseFloat(p.total_deposits) || 0).toLocaleString()}</td>
                         <td><span class="badge badge-${p.kyc_status === 'verified' ? 'verified' : p.kyc_status === 'under_review' ? 'review' : 'pending'}">${p.kyc_status || 'pending'}</span></td>
                         <td>${new Date(p.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <button class="action-btn btn-credit" onclick="openCreditModal('${p.id}', '${p.email}', ${p.balance || 0})"><i class="fas fa-coins"></i> Credit</button>
+                        </td>
                     </tr>
                 `).join('');
             } catch (error) {
                 console.error("Users error:", error);
+            }
+        }
+
+        // --- CREDIT USER FUNCTIONS ---
+        function openCreditModal(userId, email, currentBalance) {
+            creditUserId = userId;
+            document.getElementById('credit-user-email').innerText = email;
+            document.getElementById('credit-user-balance').innerText = '$' + (parseFloat(currentBalance) || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('credit-amount').value = '';
+            document.getElementById('credit-description').value = '';
+            document.getElementById('credit-type').value = 'admin_credit';
+            document.getElementById('credit-modal').classList.add('show');
+        }
+
+        async function confirmCreditUser() {
+            if (!creditUserId) return;
+            
+            const amount = parseFloat(document.getElementById('credit-amount').value);
+            const type = document.getElementById('credit-type').value;
+            const description = document.getElementById('credit-description').value.trim();
+            
+            if (!amount || amount <= 0) {
+                showToast('Please enter a valid amount', true);
+                return;
+            }
+            
+            try {
+                // 1. Get current user profile
+                const { data: profile, error: profileError } = await supabaseClient
+                    .from('profiles')
+                    .select('balance, total_deposits')
+                    .eq('id', creditUserId)
+                    .single();
+                
+                if (profileError) throw profileError;
+                
+                // 2. Calculate new balance
+                const currentBalance = parseFloat(profile.balance) || 0;
+                const newBalance = currentBalance + amount;
+                
+                // 3. Update user balance
+                const { error: updateError } = await supabaseClient
+                    .from('profiles')
+                    .update({ balance: newBalance })
+                    .eq('id', creditUserId);
+                
+                if (updateError) throw updateError;
+                
+                // 4. Create transaction record
+                const txDescription = description || `Admin credited $${amount.toLocaleString()} to account`;
+                const { error: txError } = await supabaseClient
+                    .from('transactions')
+                    .insert({
+                        user_id: creditUserId,
+                        type: type,
+                        amount: amount,
+                        description: txDescription,
+                        status: 'completed'
+                    });
+                
+                if (txError) throw txError;
+                
+                showToast(`Successfully credited $${amount.toLocaleString()} to user!`, false);
+                closeModal('credit-modal');
+                loadAllData();
+                
+            } catch (error) {
+                console.error('Credit error:', error);
+                showToast('Error crediting user: ' + error.message, true);
             }
         }
 
@@ -966,8 +1102,8 @@
                     <tr>
                         <td>${tx.profiles?.email || 'Unknown'}</td>
                         <td style="text-transform: capitalize;">${tx.type}</td>
-                        <td style="font-weight: 700; color: ${tx.type === 'deposit' || tx.type === 'profit' ? 'var(--success)' : 'var(--danger)'};">
-                            ${tx.type === 'deposit' || tx.type === 'profit' ? '+' : '-'}$${parseFloat(tx.amount).toLocaleString()}
+                        <td style="font-weight: 700; color: ${tx.type === 'deposit' || tx.type === 'profit' || tx.type === 'admin_credit' || tx.type === 'bonus' || tx.type === 'refund' || tx.type === 'compensation' ? 'var(--success)' : 'var(--danger)'};">
+                            ${tx.type === 'deposit' || tx.type === 'profit' || tx.type === 'admin_credit' || tx.type === 'bonus' || tx.type === 'refund' || tx.type === 'compensation' ? '+' : '-'}$${parseFloat(tx.amount).toLocaleString()}
                         </td>
                         <td><span class="badge badge-${tx.status}">${tx.status}</span></td>
                         <td>${new Date(tx.created_at).toLocaleDateString()}</td>
