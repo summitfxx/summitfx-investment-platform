@@ -617,10 +617,7 @@
                 <div class="form-group">
                     <label>Transaction Type</label>
                     <select id="credit-type">
-                        <option value="admin_credit">Admin Credit</option>
-                        <option value="bonus">Bonus</option>
-                        <option value="refund">Refund</option>
-                        <option value="compensation">Compensation</option>
+                        <option value="deposit">Deposit</option>
                         <option value="profit">Profit</option>
                     </select>
                 </div>
@@ -1025,7 +1022,7 @@
             document.getElementById('credit-user-balance').innerText = '$' + (parseFloat(currentBalance) || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
             document.getElementById('credit-amount').value = '';
             document.getElementById('credit-description').value = '';
-            document.getElementById('credit-type').value = 'admin_credit';
+            document.getElementById('credit-type').value = 'deposit';
             document.getElementById('credit-modal').classList.add('show');
         }
 
@@ -1102,8 +1099,8 @@
                     <tr>
                         <td>${tx.profiles?.email || 'Unknown'}</td>
                         <td style="text-transform: capitalize;">${tx.type}</td>
-                        <td style="font-weight: 700; color: ${tx.type === 'deposit' || tx.type === 'profit' || tx.type === 'admin_credit' || tx.type === 'bonus' || tx.type === 'refund' || tx.type === 'compensation' ? 'var(--success)' : 'var(--danger)'};">
-                            ${tx.type === 'deposit' || tx.type === 'profit' || tx.type === 'admin_credit' || tx.type === 'bonus' || tx.type === 'refund' || tx.type === 'compensation' ? '+' : '-'}$${parseFloat(tx.amount).toLocaleString()}
+                        <td style="font-weight: 700; color: ${tx.type === 'deposit' || tx.type === 'profit' ? 'var(--success)' : 'var(--danger)'};">
+                            ${tx.type === 'deposit' || tx.type === 'profit' ? '+' : '-'}$${parseFloat(tx.amount).toLocaleString()}
                         </td>
                         <td><span class="badge badge-${tx.status}">${tx.status}</span></td>
                         <td>${new Date(tx.created_at).toLocaleDateString()}</td>
