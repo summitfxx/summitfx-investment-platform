@@ -753,8 +753,10 @@ const { createClient } = supabase;
 const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* BOT CONFIGURATION */
-const MIN_BALANCE = 100; // Minimum balance required to run bot
-const STOP_BALANCE = 10; // Auto-stop if balance drops below this
+const MIN_BALANCE = 100;
+const STOP_BALANCE = 10;
+const MAX_PROFIT_24H = 15000;
+const PROFIT_PER_SECOND = MAX_PROFIT_24H / (24 * 60 * 60);
 
 /* BOT DATA */
 let balance = 0;
@@ -762,6 +764,9 @@ let totalProfit = 0;
 let livePL = 0;
 let activeTrades = 0;
 let running = false;
+let botActivatedAt = null;
+let botTotalEarned = 0;
+let lastUpdateTime = null;
 
 /* ELEMENTS */
 const balanceEl = document.getElementById('balance');
@@ -793,6 +798,17 @@ async function loadBalance(){
         
         if(data){
             balance = Number(data.balance || 0);
+            botActivatedAt = data.bot_activated_at ? new Date(data.bot_activated_at) : null;
+            botTotalEarned = Number(data.bot_total_earned || 0);
+            
+            if(data.bot_status === 'running' && botActivatedAt){
+                calculateOfflineProfit();
+                running = true;
+                statusEl.innerText = 'RUNNING';
+                statusEl.className = 'status running';
+                startBtn.disabled = true;
+                startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> RUNNING...';
+            }
         }
         
         updateUI();
@@ -800,6 +816,40 @@ async function loadBalance(){
     }
     catch(err){
         console.log(err);
+    }
+}
+
+/* CALCULATE OFFLINE PROFIT */
+function calculateOfflineProfit(){
+    if(!botActivatedAt || !running) return;
+    
+    const now = new Date();
+    const elapsedSeconds = (now - botActivatedAt) / 1000;
+    
+    if(elapsedSeconds >= 86400){
+        botActivatedAt = now;
+        botTotalEarned = 0;
+        saveBotState();
+        return;
+    }
+    
+    const profitEarned = elapsedSeconds * PROFIT_PER_SECOND;
+    const newProfit = profitEarned - botTotalEarned;
+    
+    if(newProfit > 0){
+        balance += newProfit;
+        totalProfit += newProfit;
+        botTotalEarned = profitEarned;
+        livePL = newProfit;
+        
+        const numTrades = Math.floor(newProfit / 10);
+        for(let i = 0; i < Math.min(numTrades, 5); i++){
+            const tradeProfit = newProfit / numTrades;
+            addTradeLog(tradeProfit);
+        }
+        
+        saveBalance();
+        saveBotState();
     }
 }
 
@@ -966,11 +1016,25 @@ async function saveBalance(){
         .eq('id', session.user.id);
 }
 
-/* BOT ENGINE */
+/* SAVE BOT STATE */
+async function saveBotState(){
+    const { data:{ session } } = await client.auth.getSession();
+    if(!session) return;
+    
+    await client
+        .from('profiles')
+        .update({ 
+            bot_activated_at: botActivatedAt ? botActivatedAt.toISOString() : null,
+            bot_total_earned: botTotalEarned,
+            bot_status: running ? 'running' : 'stopped'
+        })
+        .eq('id', session.user.id);
+}
+
+/* BOT ENGINE - TIME BASED */
 function botLoop(){
     if(!running) return;
     
-    // SAFETY CHECK: Auto-stop if balance too low
     if(balance < STOP_BALANCE){
         stopBot();
         addTradeLog(0);
@@ -988,44 +1052,62 @@ function botLoop(){
         return;
     }
     
-    let trade;
+    const now = new Date();
+    const elapsedSeconds = (now - botActivatedAt) / 1000;
     
-    if(Math.random() > 0.2){
-        trade = Math.random() * 40;
-    }
-    else{
-        trade = -(Math.random() * 20);
+    if(elapsedSeconds >= 86400){
+        botActivatedAt = now;
+        botTotalEarned = 0;
+        saveBotState();
+        addTradeLog(0);
+        const div = document.createElement('div');
+        div.className = 'log-item';
+        div.style.borderColor = '#f5a623';
+        div.innerHTML = `
+            <div class="log-pair" style="color:#f5a623;">
+                <i class="fas fa-sync-alt"></i>
+                <span>24h Cycle Complete</span>
+            </div>
+            <span style="color:#f5a623; font-weight:700;">Resetting...</span>
+        `;
+        tradeLog.prepend(div);
+        return;
     }
     
-    // Prevent balance from going negative
-    if(balance + trade < 0){
-        trade = -balance + 1; // Only lose what's available
-    }
+    const profitThisInterval = 3 * PROFIT_PER_SECOND;
+    const variation = (Math.random() - 0.5) * 0.05;
+    const actualProfit = profitThisInterval + variation;
     
-    balance += trade;
-    totalProfit += trade;
-    livePL = trade;
+    balance += actualProfit;
+    totalProfit += actualProfit;
+    botTotalEarned += actualProfit;
+    livePL = actualProfit;
     activeTrades = Math.floor(Math.random() * 4) + 1;
     
     updateCandles();
     updateUI();
-    addTradeLog(trade);
+    addTradeLog(actualProfit);
     saveBalance();
+    saveBotState();
 }
 
 /* START BOT */
 function startBot(){
-    // CHECK BALANCE BEFORE STARTING
     if(balance < MIN_BALANCE){
         showFundModal();
         return;
     }
     
     running = true;
+    botActivatedAt = new Date();
+    botTotalEarned = 0;
+    
     statusEl.innerText = 'RUNNING';
     statusEl.className = 'status running';
     startBtn.disabled = true;
     startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> RUNNING...';
+    
+    saveBotState();
 }
 
 /* PAUSE */
@@ -1035,17 +1117,24 @@ function pauseBot(){
     statusEl.className = 'status paused';
     startBtn.disabled = false;
     startBtn.innerHTML = '<i class="fas fa-play"></i> START BOT';
+    
+    saveBotState();
 }
 
 /* STOP */
 function stopBot(){
     running = false;
+    botActivatedAt = null;
+    botTotalEarned = 0;
+    
     statusEl.innerText = 'STOPPED';
     statusEl.className = 'status stopped';
     livePL = 0;
     activeTrades = 0;
     updateUI();
     updateStartButton();
+    
+    saveBotState();
 }
 
 /* FUND MODAL FUNCTIONS */
@@ -1063,7 +1152,6 @@ function goToDeposit(){
     window.location.href = 'deposit.html';
 }
 
-/* Close modal on outside click */
 fundModal.addEventListener('click', (e) => {
     if(e.target === fundModal){
         closeFundModal();
@@ -1076,8 +1164,12 @@ updateUI();
 loadBalance();
 setInterval(botLoop, 3000);
 
-/* Refresh balance every 10 seconds */
-setInterval(loadBalance, 10000);
+setInterval(() => {
+    loadBalance();
+    if(running){
+        calculateOfflineProfit();
+    }
+}, 10000);
 
 </script>
 
